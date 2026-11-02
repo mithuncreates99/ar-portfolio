@@ -32,7 +32,7 @@
     const a = document.createElement('a');
     a.rel = 'ar';
     // fixed real-world size (no pinch-to-resize), plus a button that opens my portfolio site
-    a.href = 'assets/ar/portfolio.usdz#allowsContentScaling=0&callToAction=' + encodeURIComponent('Open my portfolio') +
+    a.href = 'assets/ar/portfolio.usdz?v=20261103#allowsContentScaling=0&callToAction=' + encodeURIComponent('Open my portfolio') +
       '&checkoutTitle=' + encodeURIComponent(TITLE) + '&checkoutSubtitle=' + encodeURIComponent(SUBTITLE);
     a.appendChild(document.createElement('img'));      // Quick Look links need an image child
     a.style.display = 'none';
@@ -44,7 +44,7 @@
   }
 
   function sceneViewerUrl() {
-    const params = 'file=' + encodeURIComponent(abs('assets/ar/portfolio.glb')) +
+    const params = 'file=' + encodeURIComponent(abs('assets/ar/portfolio.glb?v=20261103')) +
       '&mode=ar_preferred&resizable=false' +
       '&title=' + encodeURIComponent(TITLE + ' · AR Portfolio') +
       '&link=' + encodeURIComponent(SITE);

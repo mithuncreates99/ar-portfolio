@@ -167,7 +167,7 @@
 
   // ---------- Start ----------
   if (!hasWebGL()) {
-    PortfolioBoard.load('assets/board.json').then(showFallback, function () { showFallback(null); });
+    PortfolioBoard.load('assets/board.json?v=20261103').then(showFallback, function () { showFallback(null); });
     return;
   }
   const modelReady = new Promise(function (resolve) {
@@ -179,7 +179,7 @@
     if (scene.hasLoaded) resolve(); else scene.addEventListener('loaded', resolve);
   });
 
-  Promise.all([PortfolioBoard.load('assets/board.json'), sceneReady]).then(function (r) {
+  Promise.all([PortfolioBoard.load('assets/board.json?v=20261103'), sceneReady]).then(function (r) {
     layout = r[0];
     buildTabs();
     board = PortfolioBoard.mount({

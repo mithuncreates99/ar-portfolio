@@ -10,7 +10,7 @@
   <script src="libs/aframe.min.js"></script>
   <script src="libs/mindar-image-aframe.prod.js"></script>
   <script src="libs/aframe-extras.loaders.min.js"></script>
-  <script src="js/board.js"></script>
+  <script src="js/board.js?v=20261103"></script>
   <style>
     :root {
       --bg: #0b0d1a; --panel: #181d34; --text: #f2f4ff; --muted: #c9cee6; --accent: #6c8cff;
@@ -117,7 +117,7 @@
       const hint = document.getElementById('hint');
       let board = null;
 
-      PortfolioBoard.load('assets/board.json').then(function (layout) {
+      PortfolioBoard.load('assets/board.json?v=20261103').then(function (layout) {
         const ready = function () {
           board = PortfolioBoard.mount({
             layout: layout,

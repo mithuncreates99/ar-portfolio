@@ -146,6 +146,8 @@ The `docs/` folder is a static site with no build step. Serve it over HTTPS or f
 npx serve docs
 ```
 
+GitHub Pages lets browsers cache files for 10 minutes, so after changing anything in `docs/`, bump the `?v=` version on the scripts and data files (in `index.html`, `scan.html` and `js/*.js`) so visitors get the new copies straight away.
+
 To use a different card, compile it into a new `targets.mind` with the [MindAR image target compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile) and replace `docs/assets/targets.mind`.
 
 ### Markerless AR files
