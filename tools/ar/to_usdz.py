@@ -13,7 +13,7 @@ print('objects', len(bpy.data.objects), 'armatures', [o.name for o in bpy.data.o
 bpy.ops.wm.usd_export(filepath=dst, export_animation=True, export_armatures=True, only_deform_bones=False,
     export_materials=True, generate_preview_surface=True, export_textures_mode='NEW', overwrite_textures=True,
     convert_orientation=True, export_global_forward_selection='NEGATIVE_Z', export_global_up_selection='Y',
-    export_lights=False, export_cameras=False, triangulate_meshes=True, root_prim_path='/root',
+    export_lights=False, export_cameras=False, triangulate_meshes=True, root_prim_path='/Root/Scenes/Scene',
     accessibility_label='Mithun Kumar Vijayakumar - AR portfolio',
     accessibility_description='An animated display of Mithun Kumar Vijayakumar\'s portfolio: about, education, skills, projects, awards and contact.')
 print('exported', dst)

@@ -10,7 +10,7 @@ fs.mkdirSync('out', { recursive: true });
   await page.waitForFunction(() => window.__done || window.__error, null, { timeout: 300000 });
   const err = await page.evaluate(() => window.__error);
   if (err) { console.log('ERROR', err); process.exit(1); }
-  console.log(JSON.stringify(await page.evaluate(() => window.__info)));
+  const info = await page.evaluate(() => window.__info); console.log(JSON.stringify(info)); fs.writeFileSync('out/info.json', JSON.stringify(info));
   fs.writeFileSync('out/portfolio-raw.glb', Buffer.from(await page.evaluate(() => window.__glb), 'base64'));
   const shots = (process.env.SHOTS || '1.0,2.3,3.4,4.4,5.4,6.3,9').split(',').map(Number);
   for (const t of shots) { await page.evaluate(t => window.__render(t), t); await page.screenshot({ path: `out/check-${t}.png` }); }

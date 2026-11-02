@@ -26,7 +26,7 @@ Open **[mithuncreates99.github.io/ar-portfolio](https://mithuncreates99.github.i
 | | **See it in AR** | **View in 3D** | **Scan my card** |
 |---|---|---|---|
 | **Needs** | A phone, nothing else | Any browser | My card (printed or on another screen) |
-| **What happens** | The card slams onto your floor, the six sections launch out of it as closed books and burst open into a standing display, then the avatar beams in. It appears at a fixed, comfortable size (about 1.4 m wide) with sharp 2K–4K textures; walk closer to read. | The board, card and avatar in 3D with a reading panel that shows each section as normal text, tabs to switch, and clickable links. Drag the board to tilt it. | The board appears on top of the real card and follows it |
+| **What happens** | The card slams onto your floor, the six sections launch out of it as closed books and burst open into a standing display, then the avatar beams in. **Tap a section and it glides to the front, enlarged; tap again and it glides back** (iPhone). Fixed comfortable size, sharp 2K–4K textures. | The same display and reveal in 3D. **Tap a section and the camera flies in to it**; swipe or use ← → for the next one, tap again to fly back out. Links open from the Connect section. | The board appears on top of the real card and follows it |
 | **Runs on** | iPhone: AR Quick Look (USDZ) · Android: Scene Viewer (glTF) | Web (A-Frame) | Web (MindAR) or the iOS app (Vuforia) |
 | **Link** | [Open](https://mithuncreates99.github.io/ar-portfolio/) | [`#view`](https://mithuncreates99.github.io/ar-portfolio/#view) | [`scan.html`](https://mithuncreates99.github.io/ar-portfolio/scan.html) |
 
@@ -48,8 +48,8 @@ To try the card scan without the printed card, open the card image below on anot
 - **Shows an interactive portfolio board** above the card with six sections: About, Education, Skills, Projects, Awards and Connect. Tap a button to switch panels.
 - **Opens links** to my portfolio website and GitHub straight from the AR view.
 - **Places a 3D avatar** next to the card that waves at the viewer.
-- **Markerless AR, no app:** on any recent iPhone or Android phone, the portfolio unfolds on a real floor or table with a short animated reveal. A button inside the AR view opens my portfolio website.
-- **Works without a camera too:** a 3D view of the same scene for laptops and in-app browsers where the camera is blocked (for example inside LinkedIn).
+- **Markerless AR, no app:** on any recent iPhone or Android phone, the portfolio unfolds on a real floor or table with a short animated reveal. On iPhone you can tap any section to bring it up close, and a button inside the AR view opens my portfolio website.
+- **Works without a camera too:** a 3D view of the same display for laptops and in-app browsers where the camera is blocked (for example inside LinkedIn), with smooth tap-to-zoom on every section.
 - **Runs as an app and on the web:** a native **iOS app** (Unity + Vuforia) and a **web page** that needs no install (MindAR + A-Frame).
 
 ## How it works
@@ -74,7 +74,7 @@ flowchart LR
 | | Native app | Web version |
 |---|---|---|
 | **Engine** | Unity 6.3 LTS (URP) | A-Frame 1.5 (three.js) |
-| **Tracking** | Vuforia Engine 11.4 (image target) | Markerless: AR Quick Look (iPhone) and Scene Viewer (Android); image target: MindAR 1.2; plus a no-camera 3D view with a reading panel |
+| **Tracking** | Vuforia Engine 11.4 (image target) | Markerless: AR Quick Look (iPhone) and Scene Viewer (Android); image target: MindAR 1.2; plus a no-camera 3D view |
 | **Language** | C# | JavaScript, HTML/CSS |
 | **UI** | uGUI + TextMesh Pro, world-space canvas | Textured planes + ray-cast hotspots |
 | **Avatar** | Mixamo character, Humanoid rig, Animator | glTF 2.0 with WebP textures, animation mixer |
@@ -88,7 +88,7 @@ flowchart LR
 - **Avatar pipeline.** Mixamo characters arrive with textures packed inside the FBX. An editor step unpacks and re-links them in Unity. For the web, the character is converted to glTF with 512 px WebP textures: **28 MB → 1.8 MB** with the animation intact.
 - **Two delivery channels.** The native app gives the best tracking. The web version removes the install barrier, so a recruiter can try it in seconds from a link.
 - **Markerless AR from a script.** The reveal (card drop, shockwave, light beams, books opening, banner unroll, avatar beam-in) is generated in code with three.js, baked into a single 30 s animation clip and exported twice: glTF for Android Scene Viewer and USDZ for iPhone AR Quick Look (converted with Blender's Python API). Every effect is a pure transform animation, because neither format supports opacity animation or billboards, so fades are done with scale. Text panels are rendered at 2400 × 1720 px and the name banner at 4080 px, so the text stays sharp from arm's length. Both files pass the glTF and USD validators, and `tools/ar/build.sh` rebuilds them from the portfolio text in one command.
-- **One scene, three ways in on the web.** The AR page and the 3D view share the same board code (`docs/js/board.js`), so both always show the same content. The 3D view pairs the board with a reading panel (a bottom sheet on phones, a sidebar on laptops), so nothing needs pinching or zooming. Board buttons, tabs and the panel stay in sync, taps are ray-cast so a drag never presses a button by accident, and the camera framing fits the scene into whatever space the panel leaves free.
+- **Tap-to-zoom everywhere.** In AR Quick Look, each section sits on a static wrapper with an invisible tap area; Apple's preliminary behaviour schemas (`Preliminary_Behavior`, `TapGesture`, `Transform`, `Visibility`) glide the wrapper to a focus pose and back, while the reveal plays once on scene start and only the idle part loops (`tools/ar/add_behaviors.py`). On the web, the 3D view loads a lighter copy of the same model (WebP textures, loaded only when opened) and flies the camera to each section, framing it in the space the controls leave free.
 
 ## Project structure
 
@@ -113,11 +113,11 @@ ar-portfolio/
 │   ├── index.html                      # welcome screen (See it in AR / View in 3D) + 3D view
 │   ├── scan.html                       # AR mode: scan the card with the camera
 │   ├── js/
-│   │   ├── board.js                    # shared: board panels and tappable buttons
-│   │   ├── view.js                     # 3D view: framing, reading panel, drag-to-tilt, taps
+│   │   ├── board.js                    # card-scan mode: board panels and tappable buttons
+│   │   ├── view.js                     # 3D view: reveal, tap-to-zoom camera flights, swipe between sections
 │   │   └── ar.js                       # See it in AR: Quick Look / Scene Viewer / QR on laptops
 │   ├── assets/                         # board panels, card, avatar (GLB), MindAR target
-│   │   └── ar/                         # portfolio.usdz (iPhone) + portfolio.glb (Android)
+│   │   └── ar/                         # portfolio.usdz (iPhone, with tap-to-zoom), portfolio.glb (Android), portfolio-web.glb (3D view)
 │   ├── libs/                           # A-Frame, MindAR, aframe-extras (MIT)
 │   └── media/                          # README images
 └── tools/
@@ -155,7 +155,7 @@ To use a different card, compile it into a new `targets.mind` with the [MindAR i
 `docs/assets/ar/portfolio.usdz` (iPhone) and `portfolio.glb` (Android) are generated. After editing the portfolio text in `tools/boards/make_boards.py`, rebuild them with:
 
 ```bash
-BLENDER_PY=python3 tools/ar/build.sh   # needs Pillow, Node + Playwright, and `pip install bpy`
+BLENDER_PY=python3 tools/ar/build.sh   # needs Pillow, Node + Playwright, and `pip install bpy usd-core`
 ```
 
 ## Roadmap

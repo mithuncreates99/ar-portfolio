@@ -55,6 +55,8 @@ function glowMat(map, color, name, side = THREE.FrontSide) {
     transparent: true, depthWrite: false, side });
 }
 const backMat = new THREE.MeshStandardMaterial({ name: 'BoardBack', color: 0x0d1020, roughness: 0.8 });
+const proxyMat = new THREE.MeshStandardMaterial({ name: 'TapArea', color: 0xffffff, opacity: 0.0, alphaTest: 0.5, roughness: 1 });   // cut-out: never drawn
+const FOCUS_POS = new THREE.Vector3(0, 1.08, 0.78), FOCUS_SCALE = 1.6;   // where a tapped section comes to
 const sparkMats = [
   new THREE.MeshStandardMaterial({ name: 'SparkWhite', color: 0xffffff, emissive: 0xffffff, roughness: 1 }),
   new THREE.MeshStandardMaterial({ name: 'SparkBlue', color: 0x9fb4ff, emissive: 0x8fa8ff, roughness: 1 })];
@@ -100,7 +102,10 @@ async function build() {
 
   // sections as books
   for (const s of SECTIONS) {
-    const g = new THREE.Group(); root.add(track(g, 'Tile_' + s.id)); s.g = g;
+    // Focus_<id> is a static wrapper: tapping a section in AR Quick Look moves the wrapper onto FocusTarget_<id>
+    // (in front of the display, 1.6x larger) and back onto HomeTarget_<id>; the baked animation stays on Tile_<id>.
+    const wrap = new THREE.Group(); wrap.name = 'Focus_' + s.id; root.add(wrap); s.wrap = wrap;
+    const g = new THREE.Group(); wrap.add(track(g, 'Tile_' + s.id)); s.g = g;
     const left = new THREE.Group(); left.position.x = -W / 4; g.add(left);
     const lb = box(W / 2 + 0.006, H + 0.012, 0.012, 'Back'); lb.position.set(-0.003, 0, -0.0065); left.add(lb);
     left.add(plane(W / 2, H, screenMat(T[s.id + 'L'], s.id + 'L'), s.id + '_left'));
@@ -110,6 +115,19 @@ async function build() {
     right.add(plane(W / 2, H, screenMat(T[s.id + 'R'], s.id + 'R'), s.id + '_right'));
     const cover = plane(W / 2, H, screenMat(T[s.id + 'C'], s.id + 'Cover'), s.id + '_cover');
     cover.position.z = -0.0135; cover.rotation.y = Math.PI; right.add(cover);
+    // invisible tap areas in front of the finished tile: one to open (zoom in), one to close
+    for (const kind of ['TapOpen', 'TapClose']) {
+      const pz = plane(W, H, proxyMat, kind + '_' + s.id);
+      pz.position.set(...s.pos).add(new THREE.Vector3(0, 0, 0.012).applyAxisAngle(new THREE.Vector3(0, 1, 0), R(s.ry)));
+      pz.rotation.y = R(s.ry); wrap.add(pz);
+    }
+    // targets for the Transform actions (siblings of the wrapper, so local == world for the action)
+    const home = new THREE.Object3D(); home.name = 'HomeTarget_' + s.id; root.add(home);
+    const focus = new THREE.Object3D(); focus.name = 'FocusTarget_' + s.id;
+    const rot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), R(-s.ry));
+    focus.quaternion.copy(rot); focus.scale.setScalar(FOCUS_SCALE);
+    focus.position.copy(FOCUS_POS).sub(new THREE.Vector3(...s.pos).applyQuaternion(rot).multiplyScalar(FOCUS_SCALE));
+    root.add(focus);
     s.beam = beam(root, 'Beam_' + s.id, 0.03, 0.075, 1.2, T['beam-cyl']);
     s.halo = plane(W * 1.5, H * 1.7, glowMat(T.glow, 0x9fb4ff, 'Halo'), 'Halo_' + s.id); root.add(track(s.halo, 'Halo_' + s.id));
     s.sparks = Array.from({ length: 8 }, (_, i) => ({ m: spark(root, `Spark_${s.id}_${i}`), a: rand() * Math.PI * 2, d: 0.14 + rand() * 0.26, z: 0.05 + rand() * 0.2, s: 0.01 + rand() * 0.012, delay: rand() * 0.08 }));
@@ -240,7 +258,7 @@ async function build() {
   // rest pose = fully unfolded display, so viewers size and place the whole thing correctly
   apply(T_REMY + 2.0);
   const scene = new THREE.Scene(); scene.add(root);
-  window.__info = { tracks: tracks.length, nodes: animated.length, bones: bones.length, avatarScale: AV, T_REMY, T_HEAD };
+  window.__info = { tracks: tracks.length, nodes: animated.length, bones: bones.length, avatarScale: AV, T_REMY, T_HEAD, introEnd: T_REMY + 1.3, duration: DURATION };
   window.__apply = apply; window.__scene = scene;
 
   const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip], onlyVisible: false, maxTextureSize: 4096 });

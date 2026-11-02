@@ -5,6 +5,6 @@ import { resample, prune, dedup } from '@gltf-transform/functions';
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const doc = await io.read(process.argv[2]);
 doc.getRoot().listSkins().forEach(s => s.setSkeleton(null));
-await doc.transform(resample({ tolerance: 0.0002 }), prune(), dedup());
+await doc.transform(resample({ tolerance: 0.0002 }), prune({ keepLeaves: true }), dedup());   // keep the empty target nodes
 await io.write(process.argv[3], doc);
 console.log('written', process.argv[3]);

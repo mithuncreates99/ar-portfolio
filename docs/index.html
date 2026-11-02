@@ -21,7 +21,6 @@
 
   <script src="libs/aframe.min.js"></script>
   <script src="libs/aframe-extras.loaders.min.js"></script>
-  <script src="js/board.js?v=20261103"></script>
   <style>
     :root {
       --bg: #0b0d1a; --glow: #1b2250; --text: #f2f4ff; --muted: #a9b0d0; --accent: #6c8cff;
@@ -49,32 +48,28 @@
     .chip.ar svg { width: 18px; height: 18px; }
     .right { display: flex; gap: 8px; align-items: center; }
 
-    /* Reading panel: the current section as normal text (bottom sheet on phones, sidebar on wide screens) */
-    #reader { position: fixed; z-index: 6; left: 0; right: 0; bottom: 0; height: 44vh; height: 44dvh; display: flex; flex-direction: column;
-      box-sizing: border-box; padding: 12px 0 max(10px, env(safe-area-inset-bottom)); background: rgba(17, 21, 40, .95);
-      border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; box-shadow: 0 -12px 40px rgba(0, 0, 0, .35);
-      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-    #tabs { flex: none; display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 10px; scrollbar-width: none; }
-    #tabs::-webkit-scrollbar { display: none; }
-    .tab { flex: none; border: 1px solid var(--line); background: rgba(255, 255, 255, .05); color: var(--text); font: inherit;
-      font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 999px; cursor: pointer; }
-    .tab[aria-selected="true"] { background: var(--accent); border-color: transparent; }
-    #section { flex: 1; overflow-y: auto; padding: 2px 18px 8px; -webkit-overflow-scrolling: touch; }
-    #section .kicker { margin: 0; color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
-    #section h2 { margin: 2px 0 10px; font-size: 22px; line-height: 1.25; }
-    #s-body p { margin: 0 0 10px; color: #d6dbf0; font-size: 16px; line-height: 1.55; }
-    #s-body strong { color: var(--text); font-weight: 650; }
-    #s-body .accent { color: var(--accent); }
-    #s-links { display: grid; gap: 8px; margin: 4px 0 6px; }
-    #s-links a { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 13px 14px; border-radius: 12px;
-      background: rgba(108, 140, 255, .12); border: 1px solid rgba(108, 140, 255, .45); color: var(--text); text-decoration: none; font-weight: 650; }
-    #s-links a span { color: var(--accent); font-weight: 500; font-size: 13px; }
-    .hint { flex: none; margin: 6px 18px 0; font-size: 12px; color: #8f96b8; }
-    @media (min-width: 900px) and (min-aspect-ratio: 1/1) {
-      #reader { left: auto; top: 72px; right: 16px; bottom: 16px; width: 380px; height: auto; border: 1px solid var(--line);
-        border-radius: 20px; padding: 16px 0 12px; }
-      #tabs { flex-wrap: wrap; }
-    }
+    /* Bottom bar: hint, section chips (All · About · …), links when Connect is open */
+    #bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 10px;
+      padding: 28px 0 max(12px, env(safe-area-inset-bottom)); pointer-events: none;
+      background: linear-gradient(to top, rgba(11, 13, 26, .94) 55%, rgba(11, 13, 26, 0)); }
+    #bar > * { pointer-events: auto; }
+    #bar-hint { margin: 0; padding: 0 16px; font-size: 13px; color: var(--muted); text-align: center; }
+    #chips { display: flex; gap: 8px; max-width: 100%; overflow-x: auto; padding: 0 16px; box-sizing: border-box; scrollbar-width: none; }
+    #chips::-webkit-scrollbar { display: none; }
+    .tab { flex: none; border: 1px solid var(--line); background: rgba(255, 255, 255, .06); color: var(--text); font: inherit;
+      font-size: 14px; font-weight: 600; padding: 9px 15px; border-radius: 999px; cursor: pointer; transition: background .2s; }
+    .tab[aria-pressed="true"] { background: var(--accent); border-color: transparent; }
+    #f-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 0 16px; }
+    #f-links[hidden] { display: none; }
+    #f-links a { display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border-radius: 999px; text-decoration: none;
+      color: var(--text); font-size: 14px; font-weight: 650; background: rgba(108, 140, 255, .16); border: 1px solid rgba(108, 140, 255, .55); }
+    #f-links a span { color: var(--accent); font-weight: 500; }
+    .nav { position: fixed; top: 50%; z-index: 6; width: 44px; height: 44px; margin-top: -22px; border-radius: 50%; border: 1px solid var(--line);
+      background: var(--chip); color: var(--text); font-size: 24px; line-height: 1; cursor: pointer; display: none;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .nav.show { display: block; }
+    #prev { left: 12px; } #next { right: 12px; }
+    @media (min-width: 700px) { #chips { justify-content: center; } }
     @media (max-width: 520px) { .brand span, .code-label { display: none; } }
 
     /* Welcome screen: two ways in */
@@ -139,16 +134,13 @@
     </div>
   </header>
 
-  <section id="reader" aria-label="Portfolio sections">
-    <nav id="tabs" role="tablist" aria-label="Sections"></nav>
-    <article id="section" aria-live="polite">
-      <p class="kicker" id="s-num"></p>
-      <h2 id="s-title"></h2>
-      <div id="s-body"></div>
-      <div id="s-links"></div>
-    </article>
-    <p class="hint" id="hint">Tap a tab or a board button · drag the board to tilt it</p>
-  </section>
+  <div id="bar" aria-live="polite">
+    <div id="f-links" hidden></div>
+    <p id="bar-hint">Loading…</p>
+    <nav id="chips" aria-label="Sections"></nav>
+  </div>
+  <button class="nav" id="prev" type="button" aria-label="Previous section">‹</button>
+  <button class="nav" id="next" type="button" aria-label="Next section">›</button>
 
   <div id="welcome">
     <div class="panel">
@@ -167,7 +159,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg>
           <span class="spinner"></span>
         </span>
-        <span><b>View in 3D</b><small>No camera needed · tap each section</small></span>
+        <span><b>View in 3D</b><small>No camera needed · tap a section to zoom</small></span>
       </button>
 
       <p class="note"><a href="scan.html">Have my printed card? Scan it →</a></p>
@@ -195,37 +187,14 @@
   <a-scene id="scene"
     renderer="colorManagement: true; antialias: true; alpha: true; anisotropy: 8"
     vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" loading-screen="enabled: false">
-    <a-assets timeout="30000">
-      <img id="board-about" src="assets/board-about.png" crossorigin="anonymous">
-      <img id="board-education" src="assets/board-education.png" crossorigin="anonymous">
-      <img id="board-skills" src="assets/board-skills.png" crossorigin="anonymous">
-      <img id="board-projects" src="assets/board-projects.png" crossorigin="anonymous">
-      <img id="board-awards" src="assets/board-awards.png" crossorigin="anonymous">
-      <img id="board-connect" src="assets/board-connect.png" crossorigin="anonymous">
-      <img id="card-img" src="assets/card.jpg" crossorigin="anonymous">
-      <a-asset-item id="remy-model" src="assets/remy.glb"></a-asset-item>
-    </a-assets>
-
-    <a-entity id="cam" position="0 0.5 3" camera="fov: 40" look-controls="enabled: false" wasd-controls="enabled: false"></a-entity>
-
-    <a-entity light="type: hemisphere; color: #ffffff; groundColor: #6670a0; intensity: 2"></a-entity>
-    <a-entity light="type: directional; color: #ffffff; intensity: 1.6" position="0.5 1 1.5"></a-entity>
-
-    <!-- Same layout as in AR: the card is 1 unit wide and centred at the origin, the board floats above it. -->
-    <a-entity id="content">
-      <a-box width="1.02" height="0.667" depth="0.014" position="0 0 -0.008" material="color: #10142a; roughness: 0.7"></a-box>
-      <a-plane id="card" width="1" height="0.647" material="src: #card-img; shader: flat"></a-plane>
-      <a-entity id="board-pivot" position="0 0.36 0.02" rotation="15 0 0">
-        <a-plane id="board" position="0 0.475 0" width="1.5" height="0.95"
-          material="src: #board-about; shader: flat; transparent: true; alphaTest: 0.01"></a-plane>
-        <a-entity id="hotspots" position="0 0.475 0.006"></a-entity>
-      </a-entity>
-      <a-entity id="remy" gltf-model="#remy-model" animation-mixer="clip: *; loop: repeat"
-        position="0.93 -0.32 0.05" scale="0.225 0.225 0.225"></a-entity>
-    </a-entity>
+    <a-entity id="cam" position="0 1 3" camera="fov: 40; near: 0.02" look-controls="enabled: false" wasd-controls="enabled: false"></a-entity>
+    <a-entity light="type: hemisphere; color: #ffffff; groundColor: #6670a0; intensity: 1.6"></a-entity>
+    <a-entity light="type: directional; color: #ffffff; intensity: 1.4" position="1 2.5 3"></a-entity>
+    <!-- assets/ar/portfolio-web.glb: the AR display (lighter textures); loaded by js/view.js on demand -->
+    <a-entity id="model"></a-entity>
   </a-scene>
 
-  <script src="js/view.js?v=20261103"></script>
-  <script src="js/ar.js?v=20261103"></script>
+  <script src="js/view.js?v=20261103b"></script>
+  <script src="js/ar.js?v=20261103b"></script>
 </body>
 </html>
