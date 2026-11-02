@@ -1,0 +1,260 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>AR portfolio build</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#cfc9bf}</style>
+<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js", "three/addons/": "./node_modules/three/examples/jsm/" } }</script>
+</head><body>
+<script type="module">
+/*
+ * Builds the markerless AR scene: a stage on the floor, the business card slamming down, six sections
+ * launching from it as closed books and bursting open, the name banner unrolling, and the avatar beaming in.
+ * Every effect is a transform animation (position / rotation / scale), so it survives export to
+ * glTF (Android Scene Viewer) and USDZ (iPhone AR Quick Look). The whole timeline is baked into one clip.
+ */
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+
+const R = THREE.MathUtils.degToRad;
+const SCALE = 0.85;                       // whole display; the stand ends up ~1.6 m tall
+const FPS = 24, DURATION = 30;            // AR viewers loop the timeline
+const PRE = 1.6;                          // pause after placement before the card drops
+const W = 0.58, H = W * 860 / 1200, GAP = 0.035, HW = 1.84, HH = HW * 330 / 2400;
+const row1 = 1.31, row2 = row1 - H - GAP, head = row1 + H / 2 + GAP + HH / 2;
+const CARD = new THREE.Vector3(0, 0.012, 0.42);
+const AVATAR = new THREE.Vector3(1.45, 0, 0.05);
+const SECTIONS = [
+  { id: 'about', pos: [-0.62, row1, 0.08], ry: 15 }, { id: 'education', pos: [0, row1, 0], ry: 0 },
+  { id: 'skills', pos: [0.62, row1, 0.08], ry: -15 }, { id: 'projects', pos: [-0.62, row2, 0.08], ry: 15 },
+  { id: 'awards', pos: [0, row2, 0], ry: 0 }, { id: 'connect', pos: [0.62, row2, 0.08], ry: -15 }];
+const T_LAND = PRE + 0.55, T_TILE0 = PRE + 1.15, T_STEP = 0.3, LA = 0.6, LB = 0.3, LC = 0.45;
+const T_HEAD = T_TILE0 + T_STEP * 6 + 0.1, T_REMY = T_HEAD + 0.95;
+
+const clamp = u => Math.max(0, Math.min(1, u));
+const eOut = u => 1 - Math.pow(1 - u, 3), eIn = u => u * u;
+const eInOut = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+const eBack = (u, s = 1.9) => 1 + (s + 1) * Math.pow(u - 1, 3) + s * Math.pow(u - 1, 2);
+const seg = (t, a, d) => clamp((t - a) / d);
+const TINY = 1e-4;
+let seed = 7; const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+// ---------- materials ----------
+const loader = new THREE.TextureLoader();
+async function tex(name, jpeg) {
+  const t = await loader.loadAsync('tex/' + name);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  if (jpeg) t.userData.mimeType = 'image/jpeg';
+  return t;
+}
+// Self-lit look in every viewer: base colour + the same texture as emission.
+function screenMat(map, name) {
+  return new THREE.MeshStandardMaterial({ name, map, emissiveMap: map, emissive: 0xd9d9d9, roughness: 1, metalness: 0 });
+}
+function glowMat(map, color, name, side = THREE.FrontSide) {
+  return new THREE.MeshStandardMaterial({ name, map, color, emissiveMap: map, emissive: color, roughness: 1, metalness: 0,
+    transparent: true, depthWrite: false, side });
+}
+const backMat = new THREE.MeshStandardMaterial({ name: 'BoardBack', color: 0x0d1020, roughness: 0.8 });
+const sparkMats = [
+  new THREE.MeshStandardMaterial({ name: 'SparkWhite', color: 0xffffff, emissive: 0xffffff, roughness: 1 }),
+  new THREE.MeshStandardMaterial({ name: 'SparkBlue', color: 0x9fb4ff, emissive: 0x8fa8ff, roughness: 1 })];
+const sparkGeo = new THREE.OctahedronGeometry(1, 0);
+
+const root = new THREE.Group(); root.name = 'ARPortfolio'; root.scale.setScalar(SCALE);
+const animated = [];          // every node whose transform is baked into the clip
+const nameCount = {};
+function track(obj, name) {
+  const n = name.replace(/[^A-Za-z0-9_]/g, '_'); nameCount[n] = (nameCount[n] || 0) + 1;
+  obj.name = nameCount[n] > 1 ? n + '_' + nameCount[n] : n; animated.push(obj); return obj;
+}
+function plane(w, h, mat, name) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.name = name; return m; }
+function box(w, h, d, name) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), backMat); m.name = name; return m; }
+function spark(parent, name) { const m = new THREE.Mesh(sparkGeo, sparkMats[rand() > 0.45 ? 0 : 1]); parent.add(track(m, name)); return m; }
+function beam(parent, name, rInner, rOuter, height, glowTex) {
+  const g = new THREE.Group(); parent.add(track(g, name));
+  for (const [r, c] of [[rInner, 0xffffff], [rOuter, 0x8fa8ff]]) {
+    const geo = new THREE.CylinderGeometry(r, r, height, 24, 1, true); geo.translate(0, height / 2, 0);
+    const m = new THREE.Mesh(geo, glowMat(glowTex, c, name + 'Mat', THREE.DoubleSide)); m.name = name + '_layer'; g.add(m);
+  }
+  return g;
+}
+
+async function build() {
+  const T = {};
+  for (const s of SECTIONS) { T[s.id + 'L'] = await tex(s.id + '-L.jpg', 1); T[s.id + 'R'] = await tex(s.id + '-R.jpg', 1); T[s.id + 'C'] = await tex(s.id + '-cover.jpg', 1); }
+  T.header = await tex('header.jpg', 1); T.card = await tex('card.jpg', 1);
+  for (const f of ['glow', 'ring', 'beam-cyl', 'stage']) T[f] = await tex('fx-' + f + '.png');
+
+  // stage on the floor: always visible, gives the AR viewer a stable footprint to place
+  const stage = plane(3.4, 3.4, glowMat(T.stage, 0xffffff, 'Stage'), 'Stage');
+  stage.rotation.x = R(-90); stage.position.set(0.35, 0.003, 0.25); root.add(stage);
+
+  // card
+  const card = new THREE.Group(); root.add(track(card, 'Card'));
+  const cb = box(0.52, 0.336, 0.008, 'CardBack'); cb.position.z = -0.004; card.add(cb);
+  const cf = plane(0.5, 0.3235, screenMat(T.card, 'Card'), 'CardFace'); cf.position.z = 0.0005; card.add(cf);
+  const cardGlow = plane(1.3, 1.0, glowMat(T.glow, 0x7f9cff, 'CardGlow'), 'CardGlow');
+  root.add(track(cardGlow, 'CardGlow'));
+  const shock = plane(1, 1, glowMat(T.ring, 0x9fb4ff, 'Shock'), 'Shock'); root.add(track(shock, 'Shock'));
+  const dust = Array.from({ length: 12 }, (_, i) => ({ m: spark(root, 'Dust' + i), a: rand() * Math.PI * 2, d: 0.3 + rand() * 0.7, h: 0.05 + rand() * 0.35, s: 0.012 + rand() * 0.014 }));
+
+  // sections as books
+  for (const s of SECTIONS) {
+    const g = new THREE.Group(); root.add(track(g, 'Tile_' + s.id)); s.g = g;
+    const left = new THREE.Group(); left.position.x = -W / 4; g.add(left);
+    const lb = box(W / 2 + 0.006, H + 0.012, 0.012, 'Back'); lb.position.set(-0.003, 0, -0.0065); left.add(lb);
+    left.add(plane(W / 2, H, screenMat(T[s.id + 'L'], s.id + 'L'), s.id + '_left'));
+    const hinge = new THREE.Group(); g.add(track(hinge, 'Hinge_' + s.id)); s.hinge = hinge;
+    const right = new THREE.Group(); right.position.x = W / 4; hinge.add(right);
+    const rb = box(W / 2 + 0.006, H + 0.012, 0.012, 'Back'); rb.position.set(0.003, 0, -0.0065); right.add(rb);
+    right.add(plane(W / 2, H, screenMat(T[s.id + 'R'], s.id + 'R'), s.id + '_right'));
+    const cover = plane(W / 2, H, screenMat(T[s.id + 'C'], s.id + 'Cover'), s.id + '_cover');
+    cover.position.z = -0.0135; cover.rotation.y = Math.PI; right.add(cover);
+    s.beam = beam(root, 'Beam_' + s.id, 0.03, 0.075, 1.2, T['beam-cyl']);
+    s.halo = plane(W * 1.5, H * 1.7, glowMat(T.glow, 0x9fb4ff, 'Halo'), 'Halo_' + s.id); root.add(track(s.halo, 'Halo_' + s.id));
+    s.sparks = Array.from({ length: 8 }, (_, i) => ({ m: spark(root, `Spark_${s.id}_${i}`), a: rand() * Math.PI * 2, d: 0.14 + rand() * 0.26, z: 0.05 + rand() * 0.2, s: 0.01 + rand() * 0.012, delay: rand() * 0.08 }));
+  }
+  const header = { pos: [0, head, 0] };
+  header.g = new THREE.Group(); root.add(track(header.g, 'Header'));
+  const hb = box(HW + 0.012, HH + 0.012, 0.012, 'Back'); hb.position.z = -0.0065; header.g.add(hb);
+  header.g.add(plane(HW, HH, screenMat(T.header, 'Header'), 'HeaderFace'));
+  header.beam = beam(root, 'Beam_header', 0.05, 0.13, 1.9, T['beam-cyl']);
+  header.halo = plane(HW * 1.3, HH * 3.2, glowMat(T.glow, 0xb7c6ff, 'Halo'), 'Halo_header'); root.add(track(header.halo, 'Halo_header'));
+  header.sparks = Array.from({ length: 16 }, (_, i) => ({ m: spark(root, 'Spark_header_' + i), a: rand() * Math.PI * 2, d: 0.25 + rand() * 0.6, z: 0.05 + rand() * 0.35, s: 0.012 + rand() * 0.016, delay: rand() * 0.1 }));
+
+  // avatar
+  const gltf = await new GLTFLoader().loadAsync('tex/remy.glb');
+  const avatar = new THREE.Group(); root.add(track(avatar, 'Avatar'));
+  avatar.add(gltf.scene);
+  const bones = [];
+  gltf.scene.traverse(o => {
+    o.frustumCulled = false;
+    if (o.isBone) { o.name = o.name.replace(/[^A-Za-z0-9_]/g, '_'); bones.push(o); }
+    if (o.isMesh && o.material) {
+      const ms = Array.isArray(o.material) ? o.material : [o.material];
+      ms.forEach(m => { ['map', 'normalMap', 'roughnessMap', 'metalnessMap'].forEach(k => { if (m[k]) m[k].userData.mimeType = k === 'normalMap' ? 'image/png' : 'image/jpeg'; }); });
+    }
+  });
+  const mixer = new THREE.AnimationMixer(gltf.scene); mixer.clipAction(gltf.animations[0]).play();
+  mixer.setTime(0); avatar.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(gltf.scene, true);
+  const AV = 1.75 / (bb.max.y - bb.min.y);
+  const ring = plane(1, 1, glowMat(T.ring, 0x8fa8ff, 'AvatarRing'), 'AvatarRing'); root.add(track(ring, 'AvatarRing'));
+  const aBeam = beam(root, 'Beam_avatar', 0.12, 0.3, 2.2, T['beam-cyl']);
+  const aSparks = Array.from({ length: 10 }, (_, i) => ({ m: spark(root, 'Spark_avatar_' + i), a: rand() * Math.PI * 2, r: 0.25 + rand() * 0.25, h: rand() * 1.8, s: 0.01 + rand() * 0.012 }));
+
+  const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
+  const tileWorld = (s, lx, ly, lz) => v3(lx, ly, lz).applyEuler(new THREE.Euler(0, R(s.ry || 0), 0)).add(v3(...s.pos));
+  const setS = (o, s) => o.scale.setScalar(Math.max(TINY, s));
+
+  function apply(t) {
+    // card slams down spinning, squash on impact
+    const uf = seg(t, PRE, 0.55);
+    const bump = t > T_LAND ? Math.exp(-(t - T_LAND) * 10) * Math.sin((t - T_LAND) * 30) : 0;
+    card.position.set(CARD.x, CARD.y + 1.7 * (1 - eIn(uf)), CARD.z);
+    card.rotation.set(R(-90), 0, R(540 * (1 - eOut(uf))));
+    card.scale.set(t < PRE ? TINY : 1 + 0.08 * bump, t < PRE ? TINY : 1 + 0.08 * bump, t < PRE ? TINY : 1);
+    cardGlow.rotation.x = R(-90); cardGlow.position.set(CARD.x, 0.006, CARD.z);
+    setS(cardGlow, t < T_LAND ? 0 : eOut(seg(t, T_LAND, 0.25)) * (0.9 + 0.1 * Math.sin(t * 3)));
+    // shockwave: races outwards, then collapses once it is wide and faint
+    const us = seg(t, T_LAND, 0.75); shock.rotation.x = R(-90); shock.position.set(CARD.x, 0.008, CARD.z);
+    setS(shock, us > 0 && us < 1 ? (0.3 + 3.2 * eOut(us)) * (us > 0.85 ? (1 - us) / 0.15 : 1) : 0);
+    dust.forEach(p => { const u = seg(t, T_LAND, 0.9), e = eOut(u);
+      p.m.position.set(CARD.x + Math.cos(p.a) * p.d * e, 0.02 + p.h * Math.sin(Math.PI * e), CARD.z + Math.sin(p.a) * p.d * e * 0.7);
+      setS(p.m, u > 0 && u < 1 ? p.s * (1 - u) : 0); });
+
+    SECTIONS.forEach((s, k) => {
+      const t0 = T_TILE0 + T_STEP * k, F = v3(...s.pos), apex = F.clone().add(v3(0, 0.32, 0.3));
+      const ua = seg(t, t0, LA), ub = seg(t, t0 + LA, LB), uc = seg(t, t0 + LA + LB, LC);
+      let p; if (ub === 0) { const e = eOut(ua); p = CARD.clone().lerp(apex, e); p.y += 0.15 * Math.sin(Math.PI * e); } else p = apex.clone().lerp(F, eInOut(ub));
+      const tEnd = t0 + LA + LB + LC, bob = t > tEnd ? 0.012 * Math.sin((t - tEnd) * 2.1 + k) : 0;
+      s.g.position.set(p.x, p.y + bob, p.z);
+      const spin = 720 * (1 - eOut(clamp((t - t0) / (LA + LB))));
+      s.g.rotation.set(R(-90 * (1 - eOut(ua))), R(s.ry + spin), 0);
+      setS(s.g, t < t0 ? 0 : 0.25 + 0.75 * eOut(ua));
+      s.hinge.rotation.y = R(180 * (1 - eBack(uc, 1.6)));
+      // beam: shoots up, then thins out
+      const ub2 = seg(t, t0 - 0.05, 0.75);
+      s.beam.position.copy(CARD); s.beam.scale.set(Math.max(TINY, ub2 > 0 && ub2 < 1 ? 1 - ub2 : 0), Math.max(TINY, 0.15 + 0.85 * eOut(clamp(ub2 * 4))), Math.max(TINY, ub2 > 0 && ub2 < 1 ? 1 - ub2 : 0));
+      // halo pops behind the tile as it opens, then sinks back behind it
+      const tl = t0 + LA + LB + 0.12, ul = seg(t, tl, 0.6);
+      s.halo.position.copy(tileWorld(s, 0, 0, -0.04)); s.halo.rotation.set(0, R(s.ry), 0);
+      setS(s.halo, ul > 0 && ul < 1 ? Math.sin(Math.PI * Math.sqrt(ul)) * 1.0 : 0);
+      s.sparks.forEach(q => { const u = seg(t, tl + q.delay, 0.75), e = eOut(u);
+        const dir = v3(Math.cos(q.a), Math.sin(q.a), 0).applyEuler(new THREE.Euler(0, R(s.ry), 0));
+        q.m.position.copy(tileWorld(s, Math.cos(q.a) * W * 0.5, Math.sin(q.a) * H * 0.5, 0.02).add(dir.multiplyScalar(q.d * e)).add(v3(0, -0.05 * u * u, q.z * e)));
+        q.m.rotation.set(q.a + 6 * u, 8 * u, 0); setS(q.m, u > 0 && u < 1 ? q.s * (1 - u) : 0); });
+    });
+
+    { // name banner: rises and unrolls with the biggest burst
+      const t0 = T_HEAD, F = v3(...header.pos), ua = seg(t, t0, 0.55), ub = seg(t, t0 + 0.55, 0.5);
+      const p = CARD.clone().lerp(F, eOut(ua)), bob = t > t0 + 1.05 ? 0.01 * Math.sin((t - t0 - 1.05) * 1.8) : 0;
+      header.g.position.set(p.x, p.y + bob, p.z); header.g.rotation.set(R(-90 * (1 - eOut(ua))), 0, 0);
+      header.g.scale.set(t < t0 ? TINY : Math.max(0.02, 0.06 + 0.94 * eBack(ub, 2.2)), t < t0 ? TINY : 0.35 + 0.65 * eOut(ua), t < t0 ? TINY : 1);
+      const ub2 = seg(t, t0 - 0.05, 0.9);
+      header.beam.position.copy(CARD); header.beam.scale.set(Math.max(TINY, ub2 > 0 && ub2 < 1 ? 1 - ub2 : 0), Math.max(TINY, 0.2 + 0.8 * eOut(clamp(ub2 * 4))), Math.max(TINY, ub2 > 0 && ub2 < 1 ? 1 - ub2 : 0));
+      const tl = t0 + 0.6, ul = seg(t, tl, 0.7);
+      header.halo.position.set(F.x, F.y, F.z - 0.04); setS(header.halo, ul > 0 && ul < 1 ? Math.sin(Math.PI * Math.sqrt(ul)) : 0);
+      header.sparks.forEach(q => { const u = seg(t, tl + q.delay, 0.9), e = eOut(u);
+        q.m.position.set(F.x + Math.cos(q.a) * (HW * 0.5 + q.d * e), F.y + Math.sin(q.a) * (HH * 0.5 + q.d * e * 0.6) - 0.08 * u * u, F.z + 0.02 + q.z * e);
+        q.m.rotation.set(q.a + 6 * u, 8 * u, 0); setS(q.m, u > 0 && u < 1 ? q.s * (1 - u) : 0); });
+    }
+
+    { // avatar beams in through a ring of light, then waves
+      const ur = seg(t, T_REMY, 0.5), ug = seg(t, T_REMY + 0.25, 0.55), e = eBack(ug, 1.4);
+      avatar.position.copy(AVATAR); avatar.rotation.set(0, R(-28), 0);
+      avatar.scale.set(Math.max(TINY, ug > 0 ? AV * (0.6 + 0.4 * eOut(ug)) : 0), Math.max(TINY, ug > 0 ? AV * e : 0), Math.max(TINY, ug > 0 ? AV * (0.6 + 0.4 * eOut(ug)) : 0));
+      mixer.setTime(Math.max(0, t - T_REMY - 0.25));
+      ring.rotation.x = R(-90); ring.position.set(AVATAR.x, 0.01, AVATAR.z);
+      const close = seg(t, T_REMY + 0.8, 0.5);
+      setS(ring, ur > 0 && close < 1 ? (0.2 + 1.0 * eOut(ur)) * (1 - eIn(close)) : 0);
+      const ub2 = seg(t, T_REMY + 0.1, 1.0);
+      aBeam.position.copy(AVATAR); aBeam.scale.set(Math.max(TINY, ub2 > 0 && ub2 < 1 ? 1 - ub2 : 0), Math.max(TINY, 0.2 + 0.8 * eOut(clamp(ub2 * 3))), Math.max(TINY, ub2 > 0 && ub2 < 1 ? 1 - ub2 : 0));
+      aSparks.forEach(q => { const u = seg(t, T_REMY + 0.2, 1.1), a = q.a + u * 4;
+        q.m.position.set(AVATAR.x + Math.cos(a) * q.r * (1 - 0.5 * u), q.h * eOut(u) + 0.05, AVATAR.z + Math.sin(a) * q.r * (1 - 0.5 * u));
+        setS(q.m, u > 0 && u < 1 ? q.s * Math.sin(Math.PI * u) : 0); });
+    }
+  }
+
+  // ---------- bake ----------
+  const targets = animated.concat(bones);
+  const N = Math.round(DURATION * FPS) + 1, times = new Float32Array(N);
+  const P = targets.map(() => new Float32Array(N * 3)), Q = targets.map(() => new Float32Array(N * 4)), S = targets.map(() => new Float32Array(N * 3));
+  for (let i = 0; i < N; i++) {
+    const t = i / FPS; times[i] = t; apply(t);
+    targets.forEach((o, j) => { o.position.toArray(P[j], i * 3); o.quaternion.toArray(Q[j], i * 4); o.scale.toArray(S[j], i * 3); });
+  }
+  // keep quaternions on one hemisphere so interpolation never takes the long way round
+  Q.forEach(q => { for (let i = 1; i < N; i++) { let d = 0; for (let c = 0; c < 4; c++) d += q[i * 4 + c] * q[(i - 1) * 4 + c]; if (d < 0) for (let c = 0; c < 4; c++) q[i * 4 + c] *= -1; } });
+  const tracks = [];
+  targets.forEach((o, j) => {
+    const isBone = o.isBone;
+    tracks.push(new THREE.QuaternionKeyframeTrack(o.name + '.quaternion', times, Q[j]));
+    let moves = !isBone;
+    if (isBone) for (let i = 1; i < N && !moves; i++) for (let c = 0; c < 3; c++) if (Math.abs(P[j][i * 3 + c] - P[j][c]) > 1e-5) moves = true;
+    if (moves) tracks.push(new THREE.VectorKeyframeTrack(o.name + '.position', times, P[j]));
+    if (!isBone) tracks.push(new THREE.VectorKeyframeTrack(o.name + '.scale', times, S[j]));
+  });
+  const clip = new THREE.AnimationClip('Reveal', DURATION, tracks);
+
+  // rest pose = fully unfolded display, so viewers size and place the whole thing correctly
+  apply(T_REMY + 2.0);
+  const scene = new THREE.Scene(); scene.add(root);
+  window.__info = { tracks: tracks.length, nodes: animated.length, bones: bones.length, avatarScale: AV, T_REMY, T_HEAD };
+  window.__apply = apply; window.__scene = scene;
+
+  const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip], onlyVisible: false, maxTextureSize: 2048 });
+  const blob = new Blob([glb], { type: 'model/gltf-binary' });
+  const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.readAsDataURL(blob); });
+  window.__glb = b64;
+
+  // preview render for checking
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setSize(innerWidth, innerHeight); renderer.toneMapping = THREE.ACESFilmicToneMapping; document.body.appendChild(renderer.domElement);
+  const cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.05, 50);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a7560, 1.2)); const dl = new THREE.DirectionalLight(0xffffff, 1.5); dl.position.set(2, 4, 3); scene.add(dl);
+  window.__render = (t, cx = 0.5, cy = 1.35, cz = 3.4) => { apply(t); cam.position.set(cx, cy, cz); cam.lookAt(0.35, 0.9, 0); renderer.render(scene, cam); };
+  window.__done = true;
+}
+build().catch(e => { window.__error = String(e && e.stack || e); });
+</script>
+</body></html>

@@ -1,0 +1,11 @@
+{
+  "name": "ar-portfolio-ar-build",
+  "private": true,
+  "description": "Bakes the markerless AR reveal into glTF (Android) and USDZ (iPhone).",
+  "dependencies": {
+    "@gltf-transform/core": "4.1.1",
+    "@gltf-transform/extensions": "4.1.1",
+    "@gltf-transform/functions": "4.1.1",
+    "three": "0.158.0"
+  }
+}

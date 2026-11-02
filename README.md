@@ -21,21 +21,24 @@ An augmented-reality business card: point a phone at it and an interactive portf
 
 ## Try it
 
-Open **[mithuncreates99.github.io/ar-portfolio](https://mithuncreates99.github.io/ar-portfolio/)** on any phone or computer and pick one of two ways in:
+Open **[mithuncreates99.github.io/ar-portfolio](https://mithuncreates99.github.io/ar-portfolio/)** on your phone and tap **See it in AR**. No app, no card: point at the floor and the portfolio unfolds in your room. On a laptop, the same button shows a QR code to open it on your phone.
 
-| | **View my portfolio** | **Scan my card in AR** |
-|---|---|---|
-| **Needs** | Nothing: no card, no camera | My card (printed or on another screen) and a phone camera |
-| **What you see** | The board, the card and the avatar in 3D. Drag to turn, pinch or scroll to zoom, tap the buttons. | The same content anchored on top of the real card |
-| **Direct link** | [`/ar-portfolio/#view`](https://mithuncreates99.github.io/ar-portfolio/#view) | [`/ar-portfolio/scan.html`](https://mithuncreates99.github.io/ar-portfolio/scan.html) |
+| | **See it in AR** | **View in 3D** | **Scan my card** |
+|---|---|---|---|
+| **Needs** | A phone, nothing else | Any browser | My card (printed or on another screen) |
+| **What happens** | The card slams onto your floor, the six sections launch out of it as closed books and burst open into a standing display, then the avatar beams in. Walk around it, pinch to resize. | The board, card and avatar in 3D. Drag to turn, pinch or scroll to zoom, tap the buttons. | The board appears on top of the real card and follows it |
+| **Runs on** | iPhone: AR Quick Look (USDZ) · Android: Scene Viewer (glTF) | Web (A-Frame) | Web (MindAR) or the iOS app (Vuforia) |
+| **Link** | [Open](https://mithuncreates99.github.io/ar-portfolio/) | [`#view`](https://mithuncreates99.github.io/ar-portfolio/#view) | [`scan.html`](https://mithuncreates99.github.io/ar-portfolio/scan.html) |
+
+<img src="docs/media/ar-reveal.jpg" alt="The AR reveal: sections launching from the card, opening, and the finished display with the avatar" width="900">
 
 <p>
-  <img src="docs/media/welcome-phone.jpg" alt="Welcome screen with the two options" width="200">
+  <img src="docs/media/welcome-phone.jpg" alt="Welcome screen" width="200">
   &nbsp;
   <img src="docs/media/view-3d.jpg" alt="The 3D view: portfolio board above the card, avatar waving" width="560">
 </p>
 
-To try the AR mode without the printed card, open the card image below on another screen and scan it ([printable PDF](docs/assets/card-print.pdf)).
+To try the card scan without the printed card, open the card image below on another screen and scan it ([printable PDF](docs/assets/card-print.pdf)).
 
 <img src="docs/assets/card.jpg" alt="The AR business card" width="420">
 
@@ -45,7 +48,8 @@ To try the AR mode without the printed card, open the card image below on anothe
 - **Shows an interactive portfolio board** above the card with six sections: About, Education, Skills, Projects, Awards and Connect. Tap a button to switch panels.
 - **Opens links** to my portfolio website and GitHub straight from the AR view.
 - **Places a 3D avatar** next to the card that waves at the viewer.
-- **Works without the card too:** the web version opens straight into a 3D view of the same scene, so anyone with the link sees the portfolio, even where the camera is blocked (for example inside LinkedIn's in-app browser).
+- **Markerless AR, no app:** on any recent iPhone or Android phone, the portfolio unfolds on a real floor or table with a short animated reveal. A button inside the AR view opens my portfolio website.
+- **Works without a camera too:** a 3D view of the same scene for laptops and in-app browsers where the camera is blocked (for example inside LinkedIn).
 - **Runs as an app and on the web:** a native **iOS app** (Unity + Vuforia) and a **web page** that needs no install (MindAR + A-Frame).
 
 ## How it works
@@ -70,7 +74,7 @@ flowchart LR
 | | Native app | Web version |
 |---|---|---|
 | **Engine** | Unity 6.3 LTS (URP) | A-Frame 1.5 (three.js) |
-| **Tracking** | Vuforia Engine 11.4 (image target) | MindAR 1.2 (image target), plus a no-camera 3D view with orbit controls |
+| **Tracking** | Vuforia Engine 11.4 (image target) | Markerless: AR Quick Look (iPhone) and Scene Viewer (Android); image target: MindAR 1.2; plus a no-camera 3D view |
 | **Language** | C# | JavaScript, HTML/CSS |
 | **UI** | uGUI + TextMesh Pro, world-space canvas | Textured planes + ray-cast hotspots |
 | **Avatar** | Mixamo character, Humanoid rig, Animator | glTF 2.0 with WebP textures, animation mixer |
@@ -83,7 +87,8 @@ flowchart LR
 - **No "ghost" content.** Extended tracking kept the board visible after the card left the view, drifting on devices without motion sensors. Content is now shown only while the card is actually tracked.
 - **Avatar pipeline.** Mixamo characters arrive with textures packed inside the FBX. An editor step unpacks and re-links them in Unity. For the web, the character is converted to glTF with 512 px WebP textures: **28 MB → 1.8 MB** with the animation intact.
 - **Two delivery channels.** The native app gives the best tracking. The web version removes the install barrier, so a recruiter can try it in seconds from a link.
-- **One scene, two modes on the web.** The AR page and the 3D view share the same board code (`docs/js/board.js`), so both always show the same content. In the 3D view, orbit controls handle drag and pinch, and taps are ray-cast separately so a drag that ends on a button never presses it. The camera framing adapts to the screen: on tall phone screens the avatar moves next to the card so the board can use the full width.
+- **Markerless AR from a script.** The reveal (card drop, shockwave, light beams, books opening, banner unroll, avatar beam-in) is generated in code with three.js, baked into a single 30 s animation clip and exported twice: glTF for Android Scene Viewer and USDZ for iPhone AR Quick Look (converted with Blender's Python API). Every effect is a pure transform animation, because neither format supports opacity animation or billboards, so fades are done with scale. Both files pass the glTF and USD validators, and `tools/ar/build.sh` rebuilds them from the portfolio text in one command.
+- **One scene, three ways in on the web.** The AR page and the 3D view share the same board code (`docs/js/board.js`), so both always show the same content. In the 3D view, orbit controls handle drag and pinch, and taps are ray-cast separately so a drag that ends on a button never presses it. The camera framing adapts to the screen: on tall phone screens the avatar moves next to the card so the board can use the full width.
 
 ## Project structure
 
@@ -104,15 +109,20 @@ ar-portfolio/
 │   ├── Scenes/                         # Home.unity, SampleScene.unity (AR)
 │   └── StreamingAssets/Vuforia/        # compiled image-target database for the card
 ├── Packages/ · ProjectSettings/        # Unity project configuration
-└── docs/                               # Web version, served by GitHub Pages
-    ├── index.html                      # welcome screen + 3D view (no camera needed)
-    ├── scan.html                       # AR mode: scan the card with the camera
-    ├── js/
-    │   ├── board.js                    # shared: board panels and tappable buttons
-    │   └── view.js                     # 3D view: framing, drag/pinch, taps
-    ├── assets/                         # board panels, card, avatar (GLB), MindAR target
-    ├── libs/                           # A-Frame, MindAR, aframe-extras, orbit controls (MIT)
-    └── media/                          # README images
+├── docs/                               # Web version, served by GitHub Pages
+│   ├── index.html                      # welcome screen (See it in AR / View in 3D) + 3D view
+│   ├── scan.html                       # AR mode: scan the card with the camera
+│   ├── js/
+│   │   ├── board.js                    # shared: board panels and tappable buttons
+│   │   ├── view.js                     # 3D view: framing, drag/pinch, taps
+│   │   └── ar.js                       # See it in AR: Quick Look / Scene Viewer / QR on laptops
+│   ├── assets/                         # board panels, card, avatar (GLB), MindAR target
+│   │   └── ar/                         # portfolio.usdz (iPhone) + portfolio.glb (Android)
+│   ├── libs/                           # A-Frame, MindAR, aframe-extras, orbit controls (MIT)
+│   └── media/                          # README images
+└── tools/
+    ├── boards/make_boards.py           # renders the board panels + board.json from the portfolio text
+    └── ar/build.sh                     # rebuilds the markerless AR files (three.js bake → glTF → USDZ)
 ```
 
 ## Run it yourself
@@ -138,8 +148,17 @@ npx serve docs
 
 To use a different card, compile it into a new `targets.mind` with the [MindAR image target compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile) and replace `docs/assets/targets.mind`.
 
+### Markerless AR files
+
+`docs/assets/ar/portfolio.usdz` (iPhone) and `portfolio.glb` (Android) are generated. After editing the portfolio text in `tools/boards/make_boards.py`, rebuild them with:
+
+```bash
+BLENDER_PY=python3 tools/ar/build.sh   # needs Pillow, Node + Playwright, and `pip install bpy`
+```
+
 ## Roadmap
 
+- [ ] Markerless mode in the native app (AR Foundation plane detection) with tappable buttons
 - [ ] Android build (APK)
 - [ ] LinkedIn and email buttons
 - [ ] Content loaded from a JSON file or CMS, so the board updates without a new build
@@ -149,6 +168,7 @@ To use a different card, compile it into a new `targets.mind` with the [MindAR i
 
 - **Vuforia Engine** © PTC Inc., used under the Vuforia developer license. Not included in this repository.
 - **[MindAR](https://github.com/hiukim/mind-ar-js)**, **[A-Frame](https://aframe.io)**, **[aframe-extras](https://github.com/c-frame/aframe-extras)** and **[aframe-orbit-controls](https://github.com/supermedium/superframe)**, MIT. See `docs/libs/THIRD-PARTY-NOTICES.md`.
+- AR files built with **[three.js](https://threejs.org)** (MIT), **[glTF Transform](https://gltf-transform.dev)** (MIT) and **[Blender](https://www.blender.org)**'s Python API (GPL, used as a build tool only).
 - **Character "Remy" and "Waving" animation** from [Adobe Mixamo](https://www.mixamo.com), used under Mixamo's terms. The original FBX files are not redistributed here; the web demo contains an optimised version.
 - Card typography: [Inter](https://rsms.me/inter/) (SIL Open Font License).
 

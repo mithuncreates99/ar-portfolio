@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Mithun Kumar Vijayakumar · AR Portfolio</title>
-  <meta name="description" content="Open it and my portfolio appears in 3D. Scan my business card to see it in augmented reality.">
+  <meta name="description" content="Open it on your phone and my portfolio unfolds in augmented reality on your floor. No app, no card needed.">
   <meta name="theme-color" content="#0b0d1a">
   <link rel="canonical" href="https://mithuncreates99.github.io/ar-portfolio/">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -12,7 +12,7 @@
   <!-- Link previews (LinkedIn, WhatsApp, Slack…) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="Mithun Kumar Vijayakumar · AR Portfolio">
-  <meta property="og:description" content="Open it and my portfolio appears in 3D. Scan my business card to see it in augmented reality.">
+  <meta property="og:description" content="Open it on your phone and my portfolio unfolds in augmented reality on your floor. No app, no card needed.">
   <meta property="og:url" content="https://mithuncreates99.github.io/ar-portfolio/">
   <meta property="og:image" content="https://mithuncreates99.github.io/ar-portfolio/media/social-preview.png">
   <meta property="og:image:width" content="1280">
@@ -50,7 +50,7 @@
     footer > * { pointer-events: auto; }
     #hint { font-size: 13px; color: var(--muted); text-align: center; transition: opacity .6s; }
     .actions { display: flex; gap: 8px; align-items: center; }
-    .scan { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px; background: var(--accent);
+    .scan { border: 0; cursor: pointer; font: inherit; display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px; background: var(--accent);
       color: #fff; font-size: 16px; font-weight: 700; text-decoration: none; box-shadow: 0 10px 30px rgba(108, 140, 255, .35); }
     .scan svg { width: 20px; height: 20px; }
     .round { width: 48px; height: 48px; padding: 0; justify-content: center; cursor: pointer; opacity: 0; transform: scale(.8);
@@ -78,6 +78,14 @@
     .choice.waiting .spinner { display: block; }
     .choice.waiting .icon svg { display: none; }
     .note { margin: 8px 2px 0; font-size: 12px; line-height: 1.5; color: #8f96b8; }
+    .note a { color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: none; }
+    #ar-modal { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 16px;
+      background: rgba(5, 6, 14, .72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    #ar-modal[hidden] { display: none; }
+    #ar-modal h2 { margin: 0 0 8px; font-size: 21px; }
+    #ar-modal p { margin: 0 0 16px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+    #ar-modal .qr { display: block; width: 220px; height: 220px; margin: 0 auto 18px; padding: 10px; background: #fff; border-radius: 14px; }
+    #ar-modal .choice { justify-content: center; margin: 0; }
     .spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid rgba(255,255,255,.25); border-top-color: #fff;
       animation: spin .9s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -108,10 +116,10 @@
   <footer>
     <div id="hint">Tap the buttons on the board</div>
     <div class="actions">
-      <a class="scan" href="scan.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg>
-        Scan my card in AR
-      </a>
+      <button class="scan" type="button" data-ar>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M12 7.5 16 9.75v4.5L12 16.5l-4-2.25v-4.5z"/><path d="M8 9.75 12 12l4-2.25M12 12v4.5"/></svg>
+        See it in AR
+      </button>
       <button id="reset" class="chip round" type="button" aria-label="Reset the view">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
       </button>
@@ -123,25 +131,42 @@
       <h1>Mithun Kumar Vijayakumar</h1>
       <p class="tag">AR Portfolio · NEOMA MiM · B.Tech IT</p>
 
-      <button id="view" class="choice primary" type="button">
+      <button class="choice primary" type="button" data-ar>
+        <span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M12 7.5 16 9.75v4.5L12 16.5l-4-2.25v-4.5z"/><path d="M8 9.75 12 12l4-2.25M12 12v4.5"/></svg>
+        </span>
+        <span><b>See it in AR</b><small>No card needed · unfolds on your floor</small></span>
+      </button>
+
+      <button id="view" class="choice" type="button">
         <span class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg>
           <span class="spinner"></span>
         </span>
-        <span><b>View my portfolio</b><small>No card needed · opens in 3D</small></span>
+        <span><b>View in 3D</b><small>No camera needed · tap each section</small></span>
       </button>
 
-      <a class="choice" href="scan.html">
-        <span class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg>
-        </span>
-        <span><b>Scan my card in AR</b><small>Point your camera at my card</small></span>
-      </a>
-
-      <p class="note">Built with Unity + Vuforia (iOS app) and A-Frame + MindAR (this web version).</p>
+      <p class="note"><a href="scan.html">Have my printed card? Scan it →</a></p>
+      <p class="note">Built with Unity + Vuforia (iOS app) and A-Frame, MindAR, AR Quick Look and Scene Viewer (web).</p>
     </div>
   </div>
   <div id="fallback" hidden></div>
+
+  <!-- Shown when AR can't open here: laptop (QR code) or an in-app browser on iPhone -->
+  <div id="ar-modal" hidden>
+    <div class="panel">
+      <div data-kind="qr">
+        <h2>Open it on your phone</h2>
+        <p>Scan this code with your phone's camera, then tap <b>See it in AR</b>. My portfolio unfolds on your floor, no card needed.</p>
+        <img class="qr" src="assets/qr-open-on-phone.svg" alt="QR code linking to mithuncreates99.github.io/ar-portfolio">
+      </div>
+      <div data-kind="safari" hidden>
+        <h2>Open in Safari</h2>
+        <p>AR doesn't open inside this app. Tap the <b>⋯</b> or share menu, choose <b>Open in Safari</b> (or your browser), then tap <b>See it in AR</b> again.</p>
+      </div>
+      <button class="choice" type="button" data-close><span><b>Close</b></span></button>
+    </div>
+  </div>
 
   <a-scene id="scene"
     renderer="colorManagement: true; antialias: true; alpha: true; anisotropy: 8"
@@ -179,5 +204,6 @@
   </a-scene>
 
   <script src="js/view.js"></script>
+  <script src="js/ar.js"></script>
 </body>
 </html>
