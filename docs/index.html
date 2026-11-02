@@ -2,72 +2,149 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Mithun Kumar · AR Portfolio</title>
-  <meta name="description" content="Scan Mithun Kumar Vijayakumar's card with your phone camera to see his augmented reality portfolio.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Mithun Kumar Vijayakumar · AR Portfolio</title>
+  <meta name="description" content="Open it and my portfolio appears in 3D. Scan my business card to see it in augmented reality.">
   <meta name="theme-color" content="#0b0d1a">
+  <link rel="canonical" href="https://mithuncreates99.github.io/ar-portfolio/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+
+  <!-- Link previews (LinkedIn, WhatsApp, Slack…) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Mithun Kumar Vijayakumar · AR Portfolio">
+  <meta property="og:description" content="Open it and my portfolio appears in 3D. Scan my business card to see it in augmented reality.">
+  <meta property="og:url" content="https://mithuncreates99.github.io/ar-portfolio/">
+  <meta property="og:image" content="https://mithuncreates99.github.io/ar-portfolio/media/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+
   <script src="libs/aframe.min.js"></script>
-  <script src="libs/mindar-image-aframe.prod.js"></script>
   <script src="libs/aframe-extras.loaders.min.js"></script>
+  <script src="libs/aframe-orbit-controls.min.js"></script>
+  <script src="js/board.js"></script>
   <style>
     :root {
-      --bg: #0b0d1a; --panel: #181d34; --text: #f2f4ff; --muted: #c9cee6; --accent: #6c8cff;
+      --bg: #0b0d1a; --glow: #1b2250; --text: #f2f4ff; --muted: #a9b0d0; --accent: #6c8cff;
+      --chip: rgba(11, 13, 26, .72); --line: rgba(255, 255, 255, .1);
     }
-    html { background: var(--bg); }
-    /* body stays transparent so the camera video (placed behind the page by MindAR) is visible */
-    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; color: var(--text); }
+    html { background: radial-gradient(110% 75% at 50% 30%, var(--glow) 0%, var(--bg) 62%) fixed, var(--bg); }
+    html, body { margin: 0; height: 100%; overflow: hidden; color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; -webkit-font-smoothing: antialiased; }
     a-scene { position: absolute; inset: 0; }
-    #intro { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
-      padding: 16px; background: radial-gradient(120% 80% at 50% 0%, #1b2250 0%, var(--bg) 60%); overflow-y: auto; }
-    .card { width: 100%; max-width: 440px; background: rgba(24, 29, 52, .92); border: 1px solid rgba(255,255,255,.08);
-      border-radius: 20px; padding: 24px 20px; box-sizing: border-box; box-shadow: 0 20px 60px rgba(0,0,0,.45); }
-    h1 { margin: 0 0 4px; font-size: 24px; line-height: 1.2; }
-    .tag { margin: 0 0 20px; color: var(--accent); font-size: 14px; font-weight: 600; }
-    ol { margin: 0 0 20px; padding-left: 20px; color: var(--muted); font-size: 15px; line-height: 1.5; }
-    ol li { margin-bottom: 6px; }
-    button.primary { width: 100%; border: 0; border-radius: 14px; padding: 16px; font-size: 17px; font-weight: 700;
-      background: var(--accent); color: #fff; cursor: pointer; }
-    button.primary:disabled { opacity: .55; cursor: default; }
-    .nocard { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.08); font-size: 14px; color: var(--muted); }
-    .nocard img { display: block; width: 100%; border-radius: 10px; margin: 10px 0; }
-    .nocard a { color: var(--accent); font-weight: 600; text-decoration: none; }
-    .small { font-size: 12px; color: #8f96b8; margin-top: 14px; line-height: 1.45; }
-    #hint { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10;
-      background: rgba(11,13,26,.78); color: var(--text); padding: 10px 16px; border-radius: 999px; font-size: 14px;
-      white-space: nowrap; display: none; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-    .hidden { display: none !important; }
     .a-enter-vr, .a-enter-ar, .a-enter-vr-button, .a-enter-ar-button { display: none !important; }
+
+    header { position: fixed; top: 0; left: 0; right: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: max(12px, env(safe-area-inset-top)) 16px 12px; pointer-events: none; }
+    header > * { pointer-events: auto; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; letter-spacing: .2px; }
+    .brand img { width: 26px; height: 26px; border-radius: 7px; }
+    .brand span { color: var(--muted); font-weight: 500; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: var(--chip);
+      border: 1px solid var(--line); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .chip svg { width: 16px; height: 16px; }
+
+    footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; flex-direction: column; align-items: center;
+      gap: 10px; padding: 0 16px max(16px, env(safe-area-inset-bottom)); pointer-events: none; }
+    footer > * { pointer-events: auto; }
+    #hint { font-size: 13px; color: var(--muted); text-align: center; transition: opacity .6s; }
+    .actions { display: flex; gap: 8px; align-items: center; }
+    .scan { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px; background: var(--accent);
+      color: #fff; font-size: 16px; font-weight: 700; text-decoration: none; box-shadow: 0 10px 30px rgba(108, 140, 255, .35); }
+    .scan svg { width: 20px; height: 20px; }
+    .round { width: 48px; height: 48px; padding: 0; justify-content: center; cursor: pointer; opacity: 0; transform: scale(.8);
+      transition: opacity .25s, transform .25s; pointer-events: none; }
+    .round.show { opacity: 1; transform: none; pointer-events: auto; }
+
+    /* Welcome screen: two ways in */
+    #welcome { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 16px;
+      box-sizing: border-box; overflow-y: auto; background: radial-gradient(110% 75% at 50% 0%, var(--glow) 0%, var(--bg) 62%);
+      transition: opacity .5s; }
+    #welcome.done { opacity: 0; pointer-events: none; }
+    .panel { width: 100%; max-width: 440px; background: rgba(24, 29, 52, .92); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 22px; padding: 26px 20px 20px; box-sizing: border-box; box-shadow: 0 20px 60px rgba(0,0,0,.45); }
+    .panel h1 { margin: 0 0 4px; font-size: 25px; line-height: 1.2; }
+    .panel .tag { margin: 0 0 22px; color: var(--accent); font-size: 14px; font-weight: 600; }
+    .choice { display: flex; align-items: center; gap: 14px; width: 100%; margin-bottom: 12px; padding: 16px; border-radius: 16px;
+      box-sizing: border-box; text-align: left; text-decoration: none; cursor: pointer; font: inherit; color: var(--text);
+      border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); }
+    .choice.primary { background: var(--accent); border-color: transparent; box-shadow: 0 10px 30px rgba(108, 140, 255, .3); }
+    .choice .icon { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.16); }
+    .choice .icon svg { width: 24px; height: 24px; }
+    .choice b { display: block; font-size: 17px; margin-bottom: 2px; }
+    .choice small { display: block; font-size: 13px; opacity: .85; }
+    .choice .spinner { display: none; }
+    .choice.waiting .spinner { display: block; }
+    .choice.waiting .icon svg { display: none; }
+    .note { margin: 8px 2px 0; font-size: 12px; line-height: 1.5; color: #8f96b8; }
+    .spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid rgba(255,255,255,.25); border-top-color: #fff;
+      animation: spin .9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #fallback { position: fixed; inset: 0; z-index: 30; overflow-y: auto; padding: 24px 16px; box-sizing: border-box; background: var(--bg); }
+    #fallback img { display: block; width: 100%; max-width: 900px; margin: 0 auto 16px; }
+    #fallback p { max-width: 900px; margin: 0 auto 16px; color: var(--muted); font-size: 14px; }
+    #fallback a { color: var(--accent); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   </style>
 </head>
 <body>
-  <div id="intro">
-    <div class="card">
+  <!-- Text version for screen readers and search engines; the 3D board shows the same content. -->
+  <section class="sr-only">
+    <h1>Mithun Kumar Vijayakumar · AR Portfolio</h1>
+    <p>Master in Management student at NEOMA Business School, B.Tech in Information Technology, Pega Certified System Architect.</p>
+    <p><a href="https://mithuncreates99.github.io">Portfolio website</a> · <a href="https://github.com/mithuncreates99">GitHub</a></p>
+  </section>
+
+  <header>
+    <div class="brand"><img src="assets/favicon.svg" alt=""> AR Portfolio <span>· Mithun Kumar</span></div>
+    <a class="chip" href="https://github.com/mithuncreates99/ar-portfolio" target="_blank" rel="noopener" aria-label="Source code on GitHub">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      Code
+    </a>
+  </header>
+
+  <footer>
+    <div id="hint">Tap the buttons on the board</div>
+    <div class="actions">
+      <a class="scan" href="scan.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg>
+        Scan my card in AR
+      </a>
+      <button id="reset" class="chip round" type="button" aria-label="Reset the view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+    </div>
+  </footer>
+
+  <div id="welcome">
+    <div class="panel">
       <h1>Mithun Kumar Vijayakumar</h1>
       <p class="tag">AR Portfolio · NEOMA MiM · B.Tech IT</p>
-      <ol>
-        <li>Tap <b>Start</b> and allow the camera.</li>
-        <li>Point your phone at my card.</li>
-        <li>Tap the buttons that appear to explore.</li>
-      </ol>
-      <button id="start" class="primary" disabled>Loading…</button>
-      <div class="nocard">
-        <b>Don't have my card?</b> Open it on another screen (laptop or second phone) and scan that:
-        <a href="assets/card.jpg" target="_blank" rel="noopener"><img src="assets/card.jpg" alt="Mithun's AR card"></a>
-        <a href="assets/card.jpg" target="_blank" rel="noopener">Open the card image</a> ·
-        <a href="assets/card-print.pdf" target="_blank" rel="noopener">Printable PDF</a>
-      </div>
-      <p class="small">Works in Safari (iPhone) and Chrome (Android). If the camera doesn't start inside an app
-        like Instagram or LinkedIn, open this page in your normal browser.</p>
-      <p class="small">Built with Unity + Vuforia (iOS app) and MindAR + A-Frame (this web version) ·
-        <a href="https://github.com/mithuncreates99/ar-portfolio" target="_blank" rel="noopener" style="color: var(--accent)">Source on GitHub</a></p>
+
+      <button id="view" class="choice primary" type="button">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg>
+          <span class="spinner"></span>
+        </span>
+        <span><b>View my portfolio</b><small>No card needed · opens in 3D</small></span>
+      </button>
+
+      <a class="choice" href="scan.html">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg>
+        </span>
+        <span><b>Scan my card in AR</b><small>Point your camera at my card</small></span>
+      </a>
+
+      <p class="note">Built with Unity + Vuforia (iOS app) and A-Frame + MindAR (this web version).</p>
     </div>
   </div>
-  <div id="hint">Point your camera at the card</div>
+  <div id="fallback" hidden></div>
 
   <a-scene id="scene"
-    mindar-image="imageTargetSrc: assets/targets.mind; autoStart: false; uiLoading: no; uiScanning: yes; uiError: yes; filterMinCF: 0.0001; filterBeta: 0.01"
-    renderer="colorManagement: true; antialias: true"
+    renderer="colorManagement: true; antialias: true; alpha: true; anisotropy: 8"
     vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" loading-screen="enabled: false">
     <a-assets timeout="30000">
       <img id="board-about" src="assets/board-about.png" crossorigin="anonymous">
@@ -76,17 +153,21 @@
       <img id="board-projects" src="assets/board-projects.png" crossorigin="anonymous">
       <img id="board-awards" src="assets/board-awards.png" crossorigin="anonymous">
       <img id="board-connect" src="assets/board-connect.png" crossorigin="anonymous">
+      <img id="card-img" src="assets/card.jpg" crossorigin="anonymous">
       <a-asset-item id="remy-model" src="assets/remy.glb"></a-asset-item>
     </a-assets>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"
-      cursor="fuse: false; rayOrigin: mouse" raycaster="far: 10000; objects: .clickable"></a-camera>
+    <a-entity id="cam" position="0 0 0" camera="fov: 40" look-controls="enabled: false" wasd-controls="enabled: false"
+      orbit-controls="enableDamping: true; dampingFactor: 0.08; rotateSpeed: 0.55; zoomSpeed: 0.8; panSpeed: 0.8;
+        screenSpacePanning: true; zoomToCursor: true; minAzimuthAngle: -40; maxAzimuthAngle: 40; minPolarAngle: 62; maxPolarAngle: 112"></a-entity>
 
     <a-entity light="type: hemisphere; color: #ffffff; groundColor: #6670a0; intensity: 2"></a-entity>
     <a-entity light="type: directional; color: #ffffff; intensity: 1.6" position="0.5 1 1.5"></a-entity>
 
-    <!-- The card is 1 unit wide and 0.647 tall, centred on the target. Everything inside follows the card. -->
-    <a-entity id="target" mindar-image-target="targetIndex: 0">
+    <!-- Same layout as in AR: the card is 1 unit wide and centred at the origin, the board floats above it. -->
+    <a-entity id="content">
+      <a-box width="1.02" height="0.667" depth="0.014" position="0 0 -0.008" material="color: #10142a; roughness: 0.7"></a-box>
+      <a-plane id="card" width="1" height="0.647" material="src: #card-img; shader: flat"></a-plane>
       <a-entity id="board-pivot" position="0 0.36 0.02" rotation="15 0 0">
         <a-plane id="board" position="0 0.475 0" width="1.5" height="0.95"
           material="src: #board-about; shader: flat; transparent: true; alphaTest: 0.01"></a-plane>
@@ -97,82 +178,6 @@
     </a-entity>
   </a-scene>
 
-  <script>
-    (function () {
-      const BOARD_W = 1.5, BOARD_H = 0.95;
-      const scene = document.getElementById('scene');
-      const startBtn = document.getElementById('start');
-      const intro = document.getElementById('intro');
-      const hint = document.getElementById('hint');
-      let layout = null;
-      let active = 0;
-
-      function px2local(h) {
-        return {
-          x: ((h.x + h.w / 2) / layout.width - 0.5) * BOARD_W,
-          y: (0.5 - (h.y + h.h / 2) / layout.height) * BOARD_H,
-          w: h.w / layout.width * BOARD_W,
-          h: h.h / layout.height * BOARD_H
-        };
-      }
-
-      function openLink(url) {
-        const w = window.open(url, '_blank', 'noopener');
-        if (!w) { window.location.href = url; }
-      }
-
-      function showPanel(i) {
-        active = i;
-        const panel = layout.panels[i];
-        document.getElementById('board').setAttribute('material', 'src', '#board-' + panel.name.toLowerCase());
-        const root = document.getElementById('hotspots');
-        while (root.firstChild) root.removeChild(root.firstChild);
-        panel.hotspots.forEach(function (h) {
-          const p = px2local(h);
-          const el = document.createElement('a-plane');
-          el.setAttribute('class', 'clickable');
-          el.setAttribute('position', p.x + ' ' + p.y + ' 0');
-          el.setAttribute('width', p.w);
-          el.setAttribute('height', p.h);
-          el.setAttribute('material', 'shader: flat; transparent: true; opacity: 0; depthWrite: false');
-          el.addEventListener('click', function () {
-            if (h.type === 'panel') { if (h.index !== active) showPanel(h.index); }
-            else if (h.type === 'link') { openLink(h.url); }
-          });
-          root.appendChild(el);
-        });
-      }
-
-      fetch('assets/board.json').then(function (r) { return r.json(); }).then(function (data) {
-        layout = data;
-        const ready = function () { showPanel(0); startBtn.disabled = false; startBtn.textContent = 'Start'; };
-        if (scene.hasLoaded) ready(); else scene.addEventListener('loaded', ready);
-      }).catch(function () {
-        startBtn.textContent = 'Could not load. Please refresh.';
-      });
-
-      startBtn.addEventListener('click', function () {
-        startBtn.disabled = true;
-        startBtn.textContent = 'Starting camera…';
-        const ar = scene.systems['mindar-image-system'];
-        Promise.resolve(ar.start()).then(function () {
-          intro.classList.add('hidden');
-          hint.style.display = 'block';
-        }).catch(function (e) {
-          startBtn.disabled = false;
-          startBtn.textContent = 'Start';
-          alert('Camera could not start. Please allow camera access and open this page in Safari or Chrome.');
-        });
-      });
-
-      const target = document.getElementById('target');
-      target.addEventListener('targetFound', function () {
-        hint.textContent = 'Tap the buttons on the board';
-        window.__targetFound = (window.__targetFound || 0) + 1;
-      });
-      target.addEventListener('targetLost', function () { hint.textContent = 'Point your camera at the card'; });
-      window.__showPanel = function (i) { showPanel(i); return document.getElementById('board').getAttribute('material').src; };
-    })();
-  </script>
+  <script src="js/view.js"></script>
 </body>
 </html>

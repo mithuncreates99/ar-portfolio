@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Scan my card · Mithun Kumar · AR Portfolio</title>
+  <meta name="description" content="Scan Mithun Kumar Vijayakumar's card with your phone camera to see his augmented reality portfolio.">
+  <meta name="theme-color" content="#0b0d1a">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script src="libs/aframe.min.js"></script>
+  <script src="libs/mindar-image-aframe.prod.js"></script>
+  <script src="libs/aframe-extras.loaders.min.js"></script>
+  <script src="js/board.js"></script>
+  <style>
+    :root {
+      --bg: #0b0d1a; --panel: #181d34; --text: #f2f4ff; --muted: #c9cee6; --accent: #6c8cff;
+    }
+    html { background: var(--bg); }
+    /* body stays transparent so the camera video (placed behind the page by MindAR) is visible */
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; color: var(--text); }
+    a-scene { position: absolute; inset: 0; }
+    #intro { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
+      padding: 16px; background: radial-gradient(120% 80% at 50% 0%, #1b2250 0%, var(--bg) 60%); overflow-y: auto; }
+    .card { width: 100%; max-width: 440px; background: rgba(24, 29, 52, .92); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px; padding: 24px 20px; box-sizing: border-box; box-shadow: 0 20px 60px rgba(0,0,0,.45); }
+    h1 { margin: 0 0 4px; font-size: 24px; line-height: 1.2; }
+    .tag { margin: 0 0 20px; color: var(--accent); font-size: 14px; font-weight: 600; }
+    ol { margin: 0 0 20px; padding-left: 20px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+    ol li { margin-bottom: 6px; }
+    button.primary { width: 100%; border: 0; border-radius: 14px; padding: 16px; font-size: 17px; font-weight: 700;
+      background: var(--accent); color: #fff; cursor: pointer; }
+    button.primary:disabled { opacity: .55; cursor: default; }
+    .nocard { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.08); font-size: 14px; color: var(--muted); }
+    .nocard img { display: block; width: 100%; border-radius: 10px; margin: 10px 0; }
+    .nocard a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .small { font-size: 12px; color: #8f96b8; margin-top: 14px; line-height: 1.45; }
+    .back { display: inline-block; margin-bottom: 14px; color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: none; }
+    .secondary { width: 100%; margin-top: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 14px;
+      font-size: 16px; font-weight: 600; background: transparent; color: var(--text); cursor: pointer; text-decoration: none;
+      display: block; text-align: center; box-sizing: border-box; }
+    #exit { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; z-index: 10; display: none;
+      background: rgba(11,13,26,.78); color: var(--text); padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: 600;
+      text-decoration: none; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    #hint { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10;
+      background: rgba(11,13,26,.78); color: var(--text); padding: 10px 16px; border-radius: 999px; font-size: 14px;
+      white-space: nowrap; display: none; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .hidden { display: none !important; }
+    .a-enter-vr, .a-enter-ar, .a-enter-vr-button, .a-enter-ar-button { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="intro">
+    <div class="card">
+      <a class="back" href="./#view">← Back to the 3D view</a>
+      <h1>Scan my card</h1>
+      <p class="tag">Mithun Kumar Vijayakumar · AR Portfolio</p>
+      <ol>
+        <li>Tap <b>Start</b> and allow the camera.</li>
+        <li>Point your phone at my card.</li>
+        <li>Tap the buttons that appear to explore.</li>
+      </ol>
+      <button id="start" class="primary" disabled>Loading…</button>
+      <a class="secondary" href="./#view">No camera? View it in 3D instead</a>
+      <div class="nocard">
+        <b>Don't have my card?</b> Open it on another screen (laptop or second phone) and scan that:
+        <a href="assets/card.jpg" target="_blank" rel="noopener"><img src="assets/card.jpg" alt="Mithun's AR card"></a>
+        <a href="assets/card.jpg" target="_blank" rel="noopener">Open the card image</a> ·
+        <a href="assets/card-print.pdf" target="_blank" rel="noopener">Printable PDF</a>
+      </div>
+      <p class="small">Works in Safari (iPhone) and Chrome (Android). If the camera doesn't start inside an app
+        like Instagram or LinkedIn, open this page in your normal browser.</p>
+      <p class="small">Built with Unity + Vuforia (iOS app) and MindAR + A-Frame (this web version) ·
+        <a href="https://github.com/mithuncreates99/ar-portfolio" target="_blank" rel="noopener" style="color: var(--accent)">Source on GitHub</a></p>
+    </div>
+  </div>
+  <div id="hint">Point your camera at the card</div>
+  <a id="exit" href="./#view">← 3D view</a>
+
+  <a-scene id="scene"
+    mindar-image="imageTargetSrc: assets/targets.mind; autoStart: false; uiLoading: no; uiScanning: yes; uiError: yes; filterMinCF: 0.0001; filterBeta: 0.01"
+    renderer="colorManagement: true; antialias: true"
+    vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" loading-screen="enabled: false">
+    <a-assets timeout="30000">
+      <img id="board-about" src="assets/board-about.png" crossorigin="anonymous">
+      <img id="board-education" src="assets/board-education.png" crossorigin="anonymous">
+      <img id="board-skills" src="assets/board-skills.png" crossorigin="anonymous">
+      <img id="board-projects" src="assets/board-projects.png" crossorigin="anonymous">
+      <img id="board-awards" src="assets/board-awards.png" crossorigin="anonymous">
+      <img id="board-connect" src="assets/board-connect.png" crossorigin="anonymous">
+      <a-asset-item id="remy-model" src="assets/remy.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"
+      cursor="fuse: false; rayOrigin: mouse" raycaster="far: 10000; objects: .clickable"></a-camera>
+
+    <a-entity light="type: hemisphere; color: #ffffff; groundColor: #6670a0; intensity: 2"></a-entity>
+    <a-entity light="type: directional; color: #ffffff; intensity: 1.6" position="0.5 1 1.5"></a-entity>
+
+    <!-- The card is 1 unit wide and 0.647 tall, centred on the target. Everything inside follows the card. -->
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-entity id="board-pivot" position="0 0.36 0.02" rotation="15 0 0">
+        <a-plane id="board" position="0 0.475 0" width="1.5" height="0.95"
+          material="src: #board-about; shader: flat; transparent: true; alphaTest: 0.01"></a-plane>
+        <a-entity id="hotspots" position="0 0.475 0.006"></a-entity>
+      </a-entity>
+      <a-entity id="remy" gltf-model="#remy-model" animation-mixer="clip: *; loop: repeat"
+        position="0.93 -0.32 0.05" scale="0.225 0.225 0.225"></a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    (function () {
+      const scene = document.getElementById('scene');
+      const startBtn = document.getElementById('start');
+      const intro = document.getElementById('intro');
+      const hint = document.getElementById('hint');
+      let board = null;
+
+      PortfolioBoard.load('assets/board.json').then(function (layout) {
+        const ready = function () {
+          board = PortfolioBoard.mount({
+            layout: layout,
+            board: document.getElementById('board'),
+            hotspots: document.getElementById('hotspots')
+          });
+          startBtn.disabled = false;
+          startBtn.textContent = 'Start';
+        };
+        if (scene.hasLoaded) ready(); else scene.addEventListener('loaded', ready);
+      }).catch(function () {
+        startBtn.textContent = 'Could not load. Please refresh.';
+      });
+
+      startBtn.addEventListener('click', function () {
+        startBtn.disabled = true;
+        startBtn.textContent = 'Starting camera…';
+        const ar = scene.systems['mindar-image-system'];
+        Promise.resolve(ar.start()).then(function () {
+          intro.classList.add('hidden');
+          hint.style.display = 'block';
+          document.getElementById('exit').style.display = 'block';
+        }).catch(function (e) {
+          startBtn.disabled = false;
+          startBtn.textContent = 'Start';
+          alert('Camera could not start. Please allow camera access and open this page in Safari or Chrome.');
+        });
+      });
+
+      const target = document.getElementById('target');
+      target.addEventListener('targetFound', function () {
+        hint.textContent = 'Tap the buttons on the board';
+        window.__targetFound = (window.__targetFound || 0) + 1;
+      });
+      target.addEventListener('targetLost', function () { hint.textContent = 'Point your camera at the card'; });
+      window.__showPanel = function (i) { board.show(i); return document.getElementById('board').getAttribute('material').src; };
+    })();
+  </script>
+</body>
+</html>
