@@ -71,3 +71,4 @@ crashlytics-build.properties
 /tools/ar/node_modules/
 /tools/ar/tex/
 /tools/ar/out/
+/tools/ar/src/

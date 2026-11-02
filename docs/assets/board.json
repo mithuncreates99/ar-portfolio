@@ -1,6 +1,8 @@
 {
  "width": 1200,
  "height": 760,
+ "name": "Mithun Kumar Vijayakumar",
+ "tagline": "Master in Management @ NEOMA  |  B.Tech IT  |  Apps & AR",
  "panels": [
   {
    "name": "About",
@@ -54,7 +56,10 @@
      "w": 290,
      "h": 79.0
     }
-   ]
+   ],
+   "title": "Hi, I'm Mithun",
+   "body": "IT engineer turned business student. I build apps and augmented reality experiences, and I'm now doing a Master in Management at NEOMA Business School in Rouen, France.\n\n<c>Looking for:</c> a 6-month internship from January 2027 in IT, business analysis, data, consulting or digital transformation.",
+   "links": []
   },
   {
    "name": "Education",
@@ -108,7 +113,10 @@
      "w": 290,
      "h": 79.0
     }
-   ]
+   ],
+   "title": "Education",
+   "body": "<b>Master in Management (MiM)</b>\nNEOMA Business School, Rouen, France\n2026 - present\n\n<b>B.Tech, Information Technology</b>\nBannari Amman Institute of Technology, Tamil Nadu, India\n2022 - 2026",
+   "links": []
   },
   {
    "name": "Skills",
@@ -162,7 +170,10 @@
      "w": 290,
      "h": 79.0
     }
-   ]
+   ],
+   "title": "Skills",
+   "body": "\u2022  Pega Certified System Architect (CSA)\n\u2022  Web and iPhone app development\n\u2022  Augmented reality with Unity\n\u2022  Business strategy and case analysis\n\u2022  Languages: English, French (intermediate)",
+   "links": []
   },
   {
    "name": "Projects",
@@ -216,7 +227,10 @@
      "w": 290,
      "h": 79.0
     }
-   ]
+   ],
+   "title": "Projects",
+   "body": "<b>Tell Me</b> - habit-tracker app with daily yes/no check-ins and weekly insights (web + iPhone)\n\n<b>Xpense</b> - expense and group-split tracker app\n\n<b>AR Jet Turbine</b> - augmented reality visualization of a jet turbine\n\n<b>This AR portfolio</b> - built with Unity, Vuforia and WebAR",
+   "links": []
   },
   {
    "name": "Awards",
@@ -270,7 +284,10 @@
      "w": 290,
      "h": 79.0
     }
-   ]
+   ],
+   "title": "Awards",
+   "body": "\u2022  <b>Best Paper Award</b> - ICMCCT'25\n\n\u2022  <b>State Gold, Woodworking</b> - Tamil Nadu Skills Competition (Dec 2025)\n\n\u2022  <b>Bronze, Joinery</b> - IndiaSkills Southern Regional 2025-26",
+   "links": []
   },
   {
    "name": "Connect",
@@ -339,6 +356,18 @@
      "y": 376,
      "w": 356,
      "h": 76
+    }
+   ],
+   "title": "Let's connect",
+   "body": "Tap a link to open it.",
+   "links": [
+    {
+     "label": "Portfolio website",
+     "url": "https://mithuncreates99.github.io"
+    },
+    {
+     "label": "GitHub",
+     "url": "https://github.com/mithuncreates99"
     }
    ]
   }

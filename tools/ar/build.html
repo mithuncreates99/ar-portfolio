@@ -15,13 +15,13 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 
 const R = THREE.MathUtils.degToRad;
-const SCALE = 0.85;                       // whole display; the stand ends up ~1.6 m tall
+const SCALE = 0.76;                       // whole display: ~1.4 m wide, header at ~1.3 m, sized so you never need to pinch
 const FPS = 24, DURATION = 30;            // AR viewers loop the timeline
 const PRE = 1.6;                          // pause after placement before the card drops
 const W = 0.58, H = W * 860 / 1200, GAP = 0.035, HW = 1.84, HH = HW * 330 / 2400;
 const row1 = 1.31, row2 = row1 - H - GAP, head = row1 + H / 2 + GAP + HH / 2;
 const CARD = new THREE.Vector3(0, 0.012, 0.42);
-const AVATAR = new THREE.Vector3(1.45, 0, 0.05);
+const AVATAR = new THREE.Vector3(1.3, 0, 0.12);
 const SECTIONS = [
   { id: 'about', pos: [-0.62, row1, 0.08], ry: 15 }, { id: 'education', pos: [0, row1, 0], ry: 0 },
   { id: 'skills', pos: [0.62, row1, 0.08], ry: -15 }, { id: 'projects', pos: [-0.62, row2, 0.08], ry: 15 },
@@ -42,7 +42,8 @@ const loader = new THREE.TextureLoader();
 async function tex(name, jpeg) {
   const t = await loader.loadAsync('tex/' + name);
   t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-  if (jpeg) t.userData.mimeType = 'image/jpeg';
+  t.userData.mimeType = jpeg ? 'image/jpeg' : 'image/png';
+  t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
   return t;
 }
 // Self-lit look in every viewer: base colour + the same texture as emission.
@@ -80,8 +81,8 @@ function beam(parent, name, rInner, rOuter, height, glowTex) {
 
 async function build() {
   const T = {};
-  for (const s of SECTIONS) { T[s.id + 'L'] = await tex(s.id + '-L.jpg', 1); T[s.id + 'R'] = await tex(s.id + '-R.jpg', 1); T[s.id + 'C'] = await tex(s.id + '-cover.jpg', 1); }
-  T.header = await tex('header.jpg', 1); T.card = await tex('card.jpg', 1);
+  for (const s of SECTIONS) { T[s.id + 'L'] = await tex(s.id + '-L.png'); T[s.id + 'R'] = await tex(s.id + '-R.png'); T[s.id + 'C'] = await tex(s.id + '-cover.jpg', 1); }
+  T.header = await tex('header.png'); T.card = await tex('card.jpg', 1);
   for (const f of ['glow', 'ring', 'beam-cyl', 'stage']) T[f] = await tex('fx-' + f + '.png');
 
   // stage on the floor: always visible, gives the AR viewer a stable footprint to place
@@ -131,7 +132,7 @@ async function build() {
     if (o.isBone) { o.name = o.name.replace(/[^A-Za-z0-9_]/g, '_'); bones.push(o); }
     if (o.isMesh && o.material) {
       const ms = Array.isArray(o.material) ? o.material : [o.material];
-      ms.forEach(m => { ['map', 'normalMap', 'roughnessMap', 'metalnessMap'].forEach(k => { if (m[k]) m[k].userData.mimeType = k === 'normalMap' ? 'image/png' : 'image/jpeg'; }); });
+      ms.forEach(m => { ['map', 'normalMap', 'roughnessMap', 'metalnessMap'].forEach(k => { if (m[k]) m[k].userData.mimeType = 'image/jpeg'; }); });
     }
   });
   const mixer = new THREE.AnimationMixer(gltf.scene); mixer.clipAction(gltf.animations[0]).play();
@@ -242,7 +243,7 @@ async function build() {
   window.__info = { tracks: tracks.length, nodes: animated.length, bones: bones.length, avatarScale: AV, T_REMY, T_HEAD };
   window.__apply = apply; window.__scene = scene;
 
-  const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip], onlyVisible: false, maxTextureSize: 2048 });
+  const glb = await new GLTFExporter().parseAsync(scene, { binary: true, animations: [clip], onlyVisible: false, maxTextureSize: 4096 });
   const blob = new Blob([glb], { type: 'model/gltf-binary' });
   const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.readAsDataURL(blob); });
   window.__glb = b64;

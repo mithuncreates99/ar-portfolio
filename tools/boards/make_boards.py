@@ -116,11 +116,13 @@ def render(active):
             hotspots.append({"type": "link", "url": url, "x": lx, "y": ly, "w": 356, "h": 76})
     return img, hotspots
 
-layout = {"width": W, "height": H, "panels": []}
+layout = {"width": W, "height": H, "name": NAME, "tagline": TAGLINE, "panels": []}
 for i, s in enumerate(SECTIONS):
     img, hs = render(i)
     name = f"board-{s[0].lower()}.png"
     img.save(f"{OUT}/{name}", optimize=True)
-    layout["panels"].append({"name": s[0], "image": name, "hotspots": hs})
+    layout["panels"].append({"name": s[0], "image": name, "hotspots": hs,
+        # the same text as on the image, for the readable panel on the website (<b>, <c> = accent, \n = new line)
+        "title": s[1], "body": s[2], "links": [{"label": l, "url": u} for l, u in LINKS] if s[3] else []})
 json.dump(layout, open(f"{OUT}/board.json", "w"), indent=1)
 print("ok", [p["image"] for p in layout["panels"]])

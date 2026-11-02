@@ -7,9 +7,10 @@ def font(n, s): return ImageFont.truetype(F + n, s)
 ACCENT = (108, 140, 255); TITLE = (242, 244, 255)
 NAMES = ["About", "Education", "Skills", "Projects", "Awards", "Connect"]
 
-# Cover = what a folded tile shows before it opens (half the tile width)
+# Cover = what a folded tile shows before it opens (half the tile width), rendered TILE_SCALE times larger
+S = float(os.environ.get("TILE_SCALE", "2"))
 for i, n in enumerate(NAMES):
-    W, H = 600, 860
+    W, H = round(600 * S), round(860 * S)
     im = Image.new("RGB", (W, H)); px = im.load()
     for y in range(H):
         for x in range(W):
@@ -17,15 +18,15 @@ for i, n in enumerate(NAMES):
             px[x, y] = (int(22 + 70 * k), int(26 + 80 * k), int(58 + 170 * k))
     d = ImageDraw.Draw(im)
     for j in range(9):   # faceted highlights, echoing the card's low-poly pattern
-        a = (j * 97) % W; b = (j * 211) % H
-        d.polygon([(a, b), (a + 180, b + 60), (a + 40, b + 220)], fill=None, outline=(150, 170, 255), width=2)
-    im = im.filter(ImageFilter.GaussianBlur(0.6)); d = ImageDraw.Draw(im)
-    d.rounded_rectangle([40, 40, 140, 140], radius=24, fill=TITLE)
-    f = font("InterDisplay-Bold.otf", 46); tw = d.textlength("MK", font=f); d.text((90 - tw / 2, 63), "MK", font=f, fill=ACCENT)
-    d.text((40, 470), f"0{i+1}", font=font("InterDisplay-Bold.otf", 200), fill=TITLE)
-    d.text((44, 700), n, font=font("InterDisplay-Bold.otf", 76), fill=TITLE)
-    d.rectangle([44, 810, 164, 818], fill=TITLE)
-    im.save(f"{OUT}/cover-{n.lower()}.jpg", quality=90)
+        a_, b_ = (j * 97) % 600 * S, (j * 211) % 860 * S
+        d.polygon([(a_, b_), (a_ + 180 * S, b_ + 60 * S), (a_ + 40 * S, b_ + 220 * S)], fill=None, outline=(150, 170, 255), width=round(2 * S))
+    im = im.filter(ImageFilter.GaussianBlur(0.6 * S)); d = ImageDraw.Draw(im)
+    d.rounded_rectangle([40 * S, 40 * S, 140 * S, 140 * S], radius=round(24 * S), fill=TITLE)
+    f = font("InterDisplay-Bold.otf", round(46 * S)); tw = d.textlength("MK", font=f); d.text((90 * S - tw / 2, 63 * S), "MK", font=f, fill=ACCENT)
+    d.text((40 * S, 470 * S), f"0{i+1}", font=font("InterDisplay-Bold.otf", round(200 * S)), fill=TITLE)
+    d.text((44 * S, 700 * S), n, font=font("InterDisplay-Bold.otf", round(76 * S)), fill=TITLE)
+    d.rectangle([44 * S, 810 * S, 164 * S, 818 * S], fill=TITLE)
+    im.save(f"{OUT}/cover-{n.lower()}.jpg", quality=92)
 
 def save_rgba(arr_fn, w, h, name):
     im = Image.new("RGBA", (w, h)); px = im.load()
