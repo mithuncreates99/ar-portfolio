@@ -20,5 +20,8 @@
 *.dat  binary
 
 # Language stats: count my own code, not bundled third-party packages
-"Assets/TextMesh Pro/**" linguist-vendored
+Assets/TextMesh[[:space:]]Pro/** linguist-vendored
+*.shader linguist-vendored
+*.cginc  linguist-vendored
+*.hlsl   linguist-vendored
 docs/libs/** linguist-vendored
