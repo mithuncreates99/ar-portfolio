@@ -1,0 +1,68 @@
+# ---- Unity: generated folders (rebuilt automatically) ----
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/QCAR/
+
+# ---- iOS / Xcode build output ----
+/IOS build/
+/iOSBuild/
+*.xcodeproj/
+*.ipa
+*.app
+
+# ---- IDE and OS files ----
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+crashlytics-build.properties
+*.apk
+*.aab
+*.unitypackage
+.DS_Store
+
+# ---- Secrets: the Vuforia license key is stored in this file ----
+/Assets/Resources/VuforiaConfiguration.asset
+/Assets/Resources/VuforiaConfiguration.asset.meta
+
+# ---- Vuforia Engine package (download it from developer.vuforia.com) ----
+/Packages/com.ptc.vuforia.engine-*.tgz
+
+# ---- Mixamo source files (not redistributed, see README) ----
+/Assets/ARPortfolio/Remy*.fbx
+/Assets/ARPortfolio/Remy*.fbx.meta
+/Assets/ARPortfolio/Textures/
+/Assets/ARPortfolio/Textures.meta
+
+# ---- Unity template leftovers and empty folders ----
+/Assets/TutorialInfo/
+/Assets/TutorialInfo.meta
+/Assets/Readme.asset
+/Assets/Readme.asset.meta
+/Assets/ARPortfolio/New Folder*
+/Assets/Resources/New Folder*

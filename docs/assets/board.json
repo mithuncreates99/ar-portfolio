@@ -1,0 +1,346 @@
+{
+ "width": 1200,
+ "height": 760,
+ "panels": [
+  {
+   "name": "About",
+   "image": "board-about.png",
+   "hotspots": [
+    {
+     "type": "panel",
+     "index": 0,
+     "x": 40,
+     "y": 186.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 1,
+     "x": 40,
+     "y": 279.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 2,
+     "x": 40,
+     "y": 372.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 3,
+     "x": 40,
+     "y": 465.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 4,
+     "x": 40,
+     "y": 558.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 5,
+     "x": 40,
+     "y": 651.0,
+     "w": 290,
+     "h": 79.0
+    }
+   ]
+  },
+  {
+   "name": "Education",
+   "image": "board-education.png",
+   "hotspots": [
+    {
+     "type": "panel",
+     "index": 0,
+     "x": 40,
+     "y": 186.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 1,
+     "x": 40,
+     "y": 279.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 2,
+     "x": 40,
+     "y": 372.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 3,
+     "x": 40,
+     "y": 465.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 4,
+     "x": 40,
+     "y": 558.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 5,
+     "x": 40,
+     "y": 651.0,
+     "w": 290,
+     "h": 79.0
+    }
+   ]
+  },
+  {
+   "name": "Skills",
+   "image": "board-skills.png",
+   "hotspots": [
+    {
+     "type": "panel",
+     "index": 0,
+     "x": 40,
+     "y": 186.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 1,
+     "x": 40,
+     "y": 279.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 2,
+     "x": 40,
+     "y": 372.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 3,
+     "x": 40,
+     "y": 465.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 4,
+     "x": 40,
+     "y": 558.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 5,
+     "x": 40,
+     "y": 651.0,
+     "w": 290,
+     "h": 79.0
+    }
+   ]
+  },
+  {
+   "name": "Projects",
+   "image": "board-projects.png",
+   "hotspots": [
+    {
+     "type": "panel",
+     "index": 0,
+     "x": 40,
+     "y": 186.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 1,
+     "x": 40,
+     "y": 279.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 2,
+     "x": 40,
+     "y": 372.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 3,
+     "x": 40,
+     "y": 465.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 4,
+     "x": 40,
+     "y": 558.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 5,
+     "x": 40,
+     "y": 651.0,
+     "w": 290,
+     "h": 79.0
+    }
+   ]
+  },
+  {
+   "name": "Awards",
+   "image": "board-awards.png",
+   "hotspots": [
+    {
+     "type": "panel",
+     "index": 0,
+     "x": 40,
+     "y": 186.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 1,
+     "x": 40,
+     "y": 279.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 2,
+     "x": 40,
+     "y": 372.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 3,
+     "x": 40,
+     "y": 465.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 4,
+     "x": 40,
+     "y": 558.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 5,
+     "x": 40,
+     "y": 651.0,
+     "w": 290,
+     "h": 79.0
+    }
+   ]
+  },
+  {
+   "name": "Connect",
+   "image": "board-connect.png",
+   "hotspots": [
+    {
+     "type": "panel",
+     "index": 0,
+     "x": 40,
+     "y": 186.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 1,
+     "x": 40,
+     "y": 279.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 2,
+     "x": 40,
+     "y": 372.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 3,
+     "x": 40,
+     "y": 465.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 4,
+     "x": 40,
+     "y": 558.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "panel",
+     "index": 5,
+     "x": 40,
+     "y": 651.0,
+     "w": 290,
+     "h": 79.0
+    },
+    {
+     "type": "link",
+     "url": "https://mithuncreates99.github.io",
+     "x": 392,
+     "y": 376,
+     "w": 356,
+     "h": 76
+    },
+    {
+     "type": "link",
+     "url": "https://github.com/mithuncreates99",
+     "x": 768,
+     "y": 376,
+     "w": 356,
+     "h": 76
+    }
+   ]
+  }
+ ]
+}
