@@ -41,8 +41,45 @@ def find(name):
     assert len(hits) == 1, f'{name}: {len(hits)} matches'
     return hits[0].GetPath()
 
+# ---------- flatten the transforms above the sections ----------
+# Quick Look's Transform action applies the target's scene-space transform without accounting for the
+# affected object's parents. Blender puts the Z-up -> Y-up turn on the Scene prim and the display scale on
+# ARPortfolio, so a tapped section would get them twice. Bake the Scene turn into its children and lift the
+# wrappers and their targets up to the Scene (keeping their exact world poses), so local == scene space.
+from pxr import Gf
+def set_matrix(prim, M):
+    x = UsdGeom.Xformable(prim)
+    x.ClearXformOpOrder()
+    x.AddTransformOp().Set(M)
+def local(prim):
+    x = UsdGeom.Xformable(prim)
+    assert not any(op.GetNumTimeSamples() for op in x.GetOrderedXformOps()), f'{prim.GetPath()} is animated'
+    return x.GetLocalTransformation()
+
+layer = stage.GetRootLayer()
+R = local(scene)
+UsdGeom.Xformable(scene).ClearXformOpOrder()
+for child in scene.GetChildren():
+    if child.IsA(UsdGeom.Xformable):
+        set_matrix(child, local(child) * R)            # Gf matrices are row-major: world = local * parent
+arp = stage.GetPrimAtPath(find('ARPortfolio'))
+A = local(arp)
+xc0 = UsdGeom.XformCache(Usd.TimeCode(int(info['duration'] * 24) - 24))
+before = {k: xc0.GetLocalToWorldTransform(stage.GetPrimAtPath(find('Tile_' + k))) for k in SECTIONS}
+for k in SECTIONS:
+    for n in ('Focus', 'FocusTarget', 'HomeTarget'):
+        old = arp.GetPath().AppendChild(f'{n}_{k}'); new = scene.GetPath().AppendChild(f'{n}_{k}')
+        L = local(stage.GetPrimAtPath(old))
+        assert Sdf.CopySpec(layer, old, layer, new)
+        stage.RemovePrim(old)
+        set_matrix(stage.GetPrimAtPath(new), L * A)
+xc1 = UsdGeom.XformCache(Usd.TimeCode(int(info['duration'] * 24) - 24))
+for k in SECTIONS:   # the move must not change where anything is
+    assert Gf.IsClose(before[k], xc1.GetLocalToWorldTransform(stage.GetPrimAtPath(find('Tile_' + k))), 1e-5), k
+
 P = {k: {n: find(f'{n}_{k}') for n in ('Focus', 'TapOpen', 'TapClose', 'FocusTarget', 'HomeTarget')} for k in SECTIONS}
 ANIM_ROOT = find('ARPortfolio')
+ANIMATED = [ANIM_ROOT] + [P[k]['Focus'] for k in SECTIONS]   # the tiles now live under the lifted wrappers
 
 # ---------- writing helpers ----------
 def attr(prim, name, typ, value, uniform=False):
@@ -121,9 +158,9 @@ for k in SECTIONS:
     action(g, f'HideClose_{k}', 'Visibility', targets=[P[k]['TapClose']], mode='hide')
 seq = group(g, 'Play', 'serial')
 intro_end = round(float(info['introEnd']), 2)
-action(seq, 'Intro', 'StartAnimation', targets=[ANIM_ROOT], start=0.0, duration=intro_end)
+action(seq, 'Intro', 'StartAnimation', targets=ANIMATED, start=0.0, duration=intro_end)
 idle = group(seq, 'Idle', 'serial', loops=True)
-action(idle, 'IdleLoop', 'StartAnimation', targets=[ANIM_ROOT], start=intro_end, duration=float(info['duration']) - intro_end)
+action(idle, 'IdleLoop', 'StartAnimation', targets=ANIMATED, start=intro_end, duration=float(info['duration']) - intro_end)
 finish_group(idle); finish_group(seq); finish_group(g)
 rel(b, 'actions', [g.GetPath()])
 

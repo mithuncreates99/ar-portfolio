@@ -56,7 +56,7 @@ function glowMat(map, color, name, side = THREE.FrontSide) {
 }
 const backMat = new THREE.MeshStandardMaterial({ name: 'BoardBack', color: 0x0d1020, roughness: 0.8 });
 const proxyMat = new THREE.MeshStandardMaterial({ name: 'TapArea', color: 0xffffff, opacity: 0.0, alphaTest: 0.5, roughness: 1 });   // cut-out: never drawn
-const FOCUS_POS = new THREE.Vector3(0, 1.08, 0.78), FOCUS_SCALE = 1.6;   // where a tapped section comes to
+const FOCUS_POS = new THREE.Vector3(0, 1.08, 0.7), FOCUS_SCALE = 1.4;    // where a tapped section comes to (~0.6 m wide)
 const sparkMats = [
   new THREE.MeshStandardMaterial({ name: 'SparkWhite', color: 0xffffff, emissive: 0xffffff, roughness: 1 }),
   new THREE.MeshStandardMaterial({ name: 'SparkBlue', color: 0x9fb4ff, emissive: 0x8fa8ff, roughness: 1 })];

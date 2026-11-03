@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  const V = '20261103b';
+  const V = '20261103c';
   const MODEL = 'assets/ar/portfolio-web.glb?v=' + V;
   const IDS = ['about', 'education', 'skills', 'projects', 'awards', 'connect'];
   const INTRO_START = 1.2, INTRO_END = 6.9, DURATION = 30;     // seconds on the baked timeline
