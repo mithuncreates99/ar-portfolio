@@ -44,7 +44,7 @@
   }
 
   function sceneViewerUrl() {
-    const params = 'file=' + encodeURIComponent(abs('assets/ar/portfolio.glb?v=20261103c')) +
+    const params = 'file=' + encodeURIComponent(abs('assets/ar/portfolio.glb?v=20261103d')) +
       '&mode=ar_preferred&resizable=false' +
       '&title=' + encodeURIComponent(TITLE + ' · AR Portfolio') +
       '&link=' + encodeURIComponent(SITE);
